@@ -1,0 +1,36 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>Search results</h1>
+  <p class="subtitle">Showing matches for "<strong>{{ query }}</strong>"</p>
+
+  <div class="results">
+    {% for book in results %}
+      <div class="card result-card">
+        <h2>{{ book.title }}</h2>
+        {% if book.authors %}
+          <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
+        {% endif %}
+        {% if book.publisher %}
+          <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+        {% endif %}
+        {% if book.year %}
+          <p><strong>Year:</strong> {{ book.year }}</p>
+        {% endif %}
+
+        <form action="/confirm" method="post" class="inline-form">
+          <input type="hidden" name="title" value="{{ book.title }}">
+          <input type="hidden" name="authors" value="{{ ';'.join(book.authors) }}">
+          <input type="hidden" name="publisher" value="{{ book.publisher or '' }}">
+          <input type="hidden" name="year" value="{{ book.year or '' }}">
+          <input type="hidden" name="style" value="{{ style }}">
+          <button type="submit">Use this book</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+
+  <a href="/" class="back-link">&larr; Start a new search</a>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>Confirm book details</h1>
+  <p class="subtitle">
+    Check and edit the metadata below if needed. FolioCite will use this
+    information to build your citation.
+  </p>
+
+  <form action="/cite" method="post" class="card">
+    <label for="title">Title</label>
+    <input
+      type="text"
+      id="title"
+      name="title"
+      value="{{ title }}"
+      required
+    >
+
+    <label for="authors">Authors (separate multiple authors with a semicolon “;”)</label>
+    <input
+      type="text"
+      id="authors"
+      name="authors"
+      value="{{ authors }}"
+      placeholder="e.g. Daniel Kahneman; Amos Tversky"
+    >
+
+    <label for="year">Year</label>
+    <input
+      type="text"
+      id="year"
+      name="year"
+      value="{{ year }}"
+      placeholder="e.g. 2011"
+    >
+
+    <label for="publisher">Publisher</label>
+    <input
+      type="text"
+      id="publisher"
+      name="publisher"
+      value="{{ publisher }}"
+      placeholder="e.g. Farrar, Straus and Giroux"
+    >
+
+    <input type="hidden" name="style" value="{{ style }}">
+
+    <button type="submit">Generate citation</button>
+  </form>
+
+  <a href="/"
+     class="back-link">&larr; Start over</a>
+</div>
+{% endblock %}

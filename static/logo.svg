@@ -1,0 +1,17 @@
+
+<svg width="180" height="50" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="50" rx="10" fill="url(#grad)"/>
+  <path d="M24 12 h24 a2 2 0 0 1 2 2 v22 a2 2 0 0 1-2 2 H24 a2 2 0 0 1-2-2 V14 a2 2 0 0 1 2-2z"
+        fill="white" opacity="0.12"/>
+  <path d="M30 18 h12 v2 H30zm0 6 h16 v2 H30zm0 6 h10 v2 H30z" fill="#e5e7eb"/>
+  <text x="95" y="31" font-size="20" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        fill="white" text-anchor="middle">
+    FolioCite
+  </text>
+</svg>

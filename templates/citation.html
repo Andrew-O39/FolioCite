@@ -1,0 +1,50 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>Your citation</h1>
+
+  <div class="card">
+    <label for="citation">Formatted reference</label>
+    <textarea id="citation" readonly rows="4">{{ citation }}</textarea>
+    <button id="copy-btn" type="button">Copy to clipboard</button>
+    <p id="copy-status" class="copy-status"></p>
+  </div>
+
+  <div class="card info-card">
+    <h2>Source details</h2>
+    <p><strong>Title:</strong> {{ book.title }}</p>
+    {% if book.authors %}
+      <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
+    {% endif %}
+    {% if book.publisher %}
+      <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+    {% endif %}
+    {% if book.year %}
+      <p><strong>Year:</strong> {{ book.year }}</p>
+    {% endif %}
+    <p><strong>Style:</strong>
+      {% if style == "apa" %}APA (7th){% elif style == "mla" %}MLA (9th){% else %}Chicago (author-date){% endif %}
+    </p>
+  </div>
+
+  <a href="/" class="back-link">&larr; Generate another citation</a>
+</div>
+
+<script>
+  const btn = document.getElementById('copy-btn');
+  const textarea = document.getElementById('citation');
+  const status = document.getElementById('copy-status');
+
+  if (btn && textarea && navigator.clipboard) {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(textarea.value);
+        status.textContent = "Copied!";
+      } catch (err) {
+        status.textContent = "Could not copy automatically. Please select and copy manually.";
+      }
+    });
+  }
+</script>
+{% endblock %}

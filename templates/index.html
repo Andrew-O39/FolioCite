@@ -1,0 +1,28 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>Generate a book citation</h1>
+  <p class="subtitle">Type a book title, author, or ISBN and FolioCite will help you format the reference.</p>
+
+  {% if error %}
+    <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <form action="/search" method="post" class="card">
+    <label for="query">Book title, author, or ISBN</label>
+    <input type="text" id="query" name="query" placeholder="e.g. Thinking, Fast and Slow" required>
+
+    <label for="style">Citation style</label>
+    <select id="style" name="style">
+      <option value="apa" {% if selected_style == "apa" %}selected{% endif %}>APA (7th)</option>
+      <option value="mla" {% if selected_style == "mla" %}selected{% endif %}>MLA (9th)</option>
+      <option value="chicago" {% if selected_style == "chicago" %}selected{% endif %}>Chicago (author-date)</option>
+    </select>
+
+    <button type="submit">Search</button>
+  </form>
+
+  <p class="note">FolioCite is an early prototype. Always double-check your final references against your institution's guidelines.</p>
+</div>
+{% endblock %}
