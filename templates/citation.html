@@ -12,23 +12,38 @@
   </div>
 
   <div class="card info-card">
-    <h2>Source details</h2>
-    <p><strong>Title:</strong> {{ book.title }}</p>
-    {% if book.authors %}
-      <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
+  <h2>Source details</h2>
+  {% if book.cover_url %}
+    <div style="max-width: 180px; margin-bottom: 1rem;">
+      <img src="{{ book.cover_url }}" alt="Book cover for {{ book.title }}" style="width: 100%; border-radius: 8px;">
+    </div>
+  {% endif %}
+  <p><strong>Title:</strong> {{ book.title }}</p>
+  {% if book.authors %}
+    <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
+  {% endif %}
+  {% if book.publisher %}
+    <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+  {% endif %}
+  {% if book.place %}
+    <p><strong>Place:</strong> {{ book.place }}</p>
+  {% endif %}
+  {% if book.year %}
+    <p><strong>Year:</strong> {{ book.year }}</p>
+  {% endif %}
+  <p><strong>Style:</strong>
+    {% if style == "apa" %}
+      APA (7th)
+    {% elif style == "mla" %}
+      MLA (9th)
+    {% elif style == "chicago" %}
+      Chicago (author-date)
+    {% elif style == "harvard" %}
+      Harvard
+    {% else %}
+      {{ style }}
     {% endif %}
-    {% if book.publisher %}
-      <p><strong>Publisher:</strong> {{ book.publisher }}</p>
-    {% endif %}
-    {% if book.year %}
-      <p><strong>Year:</strong> {{ book.year }}</p>
-    {% endif %}
-    <p><strong>Style:</strong>
-      {% if style == "apa" %}APA (7th){% elif style == "mla" %}MLA (9th){% else %}Chicago (author-date){% endif %}
-    </p>
-  </div>
-
-  <a href="/" class="back-link">&larr; Generate another citation</a>
+  </p>
 </div>
 
 <script>

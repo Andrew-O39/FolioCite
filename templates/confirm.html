@@ -7,7 +7,20 @@
     information to build your citation.
   </p>
 
+  <p class="note">
+    These details were fetched automatically from Open Library and may be
+    incomplete or slightly inaccurate (especially publisher, place, and year).
+    Please adjust them before you use the citation in your thesis.
+  </p>
+
   <form action="/cite" method="post" class="card">
+
+    {% if cover_url %}
+      <div style="max-width: 220px; margin-bottom: 1rem;">
+        <img src="{{ cover_url }}" alt="Book cover for {{ title }}" style="width: 100%; border-radius: 8px;">
+      </div>
+    {% endif %}
+
     <label for="title">Title</label>
     <input
       type="text"
@@ -44,12 +57,21 @@
       placeholder="e.g. Farrar, Straus and Giroux"
     >
 
+    <label for="place">Place of publication</label>
+    <input
+      type="text"
+      id="place"
+      name="place"
+      value="{{ place }}"
+      placeholder="e.g. London"
+    >
+
     <input type="hidden" name="style" value="{{ style }}">
+    <input type="hidden" name="cover_url" value="{{ cover_url }}">
 
     <button type="submit">Generate citation</button>
   </form>
 
-  <a href="/"
-     class="back-link">&larr; Start over</a>
+  <a href="/" class="back-link">&larr; Start over</a>
 </div>
 {% endblock %}

@@ -180,3 +180,18 @@ textarea {
     font-size: 1rem;
   }
 }
+
+.result-layout {
+  display: flex;
+  gap: 1rem;
+}
+
+.result-cover img {
+  display: block;
+  max-width: 90px;
+  border-radius: 8px;
+}
+
+.result-main {
+  flex: 1;
+}

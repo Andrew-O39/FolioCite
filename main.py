@@ -34,21 +34,41 @@ async def index(request: Request):
 
 @app.post("/search", response_class=HTMLResponse)
 async def search(request: Request, query: str = Form(...), style: str = Form(...)):
-    """
-    Search for books using the Open Library API and show results to pick from.
-    """
-    books = await search_books(query)
-    if not books:
+    books, had_error = await search_books(query)
+
+    if had_error:
+        # API / server problem
+        error_message = (
+            "We couldn't reach the book database (Open Library) just now. "
+            "This is a temporary problem on their side. Please try again in a few minutes."
+        )
         return templates.TemplateResponse(
             "index.html",
             {
                 "request": request,
                 "results": None,
-                "error": f"No results found for '{query}'. Please try another search.",
+                "error": error_message,
                 "selected_style": style,
             },
         )
 
+    if not books:
+        # No error, but no matches
+        error_message = (
+            f"No books found for '{query}'. Please check the spelling or try "
+            "a different search (e.g. author name or ISBN)."
+        )
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "results": None,
+                "error": error_message,
+                "selected_style": style,
+            },
+        )
+
+    # All good: show results
     return templates.TemplateResponse(
         "results.html",
         {
@@ -66,7 +86,9 @@ async def confirm(
     authors: str = Form(...),
     year: str = Form(None),
     publisher: str = Form(None),
+    place: str = Form(None),
     style: str = Form(...),
+    cover_url: str = Form(None),
 ):
     """
     Show a confirmation/edit page where the user can adjust metadata
@@ -80,7 +102,9 @@ async def confirm(
             "authors": authors,
             "year": year or "",
             "publisher": publisher or "",
+            "place": place or "",
             "style": style,
+            "cover_url": cover_url or "",
         },
     )
 
@@ -91,7 +115,9 @@ async def cite(
     authors: str = Form(...),
     year: str = Form(None),
     publisher: str = Form(None),
+    place: str = Form(None),
     style: str = Form(...),
+    cover_url: str = Form(None),
 ):
     """
     Generate a formatted citation for the selected book.
@@ -102,6 +128,8 @@ async def cite(
         authors=authors_list,
         year=year or None,
         publisher=publisher or None,
+        place=place or None,
+        cover_url=cover_url or None,
     )
 
     citation = format_citation(book, CitationStyle(style))

@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
@@ -8,25 +7,39 @@
   <div class="results">
     {% for book in results %}
       <div class="card result-card">
-        <h2>{{ book.title }}</h2>
-        {% if book.authors %}
-          <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
-        {% endif %}
-        {% if book.publisher %}
-          <p><strong>Publisher:</strong> {{ book.publisher }}</p>
-        {% endif %}
-        {% if book.year %}
-          <p><strong>Year:</strong> {{ book.year }}</p>
-        {% endif %}
+        <div class="result-layout">
+          {% if book.cover_url %}
+            <div class="result-cover">
+              <img src="{{ book.cover_url }}" alt="Book cover for {{ book.title }}">
+            </div>
+          {% endif %}
+          <div class="result-main">
+            <h2>{{ book.title }}</h2>
+            {% if book.authors %}
+              <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
+            {% endif %}
+            {% if book.publisher %}
+              <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+            {% endif %}
+            {% if book.place %}
+              <p><strong>Place:</strong> {{ book.place }}</p>
+            {% endif %}
+            {% if book.year %}
+              <p><strong>Year:</strong> {{ book.year }}</p>
+            {% endif %}
 
-        <form action="/confirm" method="post" class="inline-form">
-          <input type="hidden" name="title" value="{{ book.title }}">
-          <input type="hidden" name="authors" value="{{ ';'.join(book.authors) }}">
-          <input type="hidden" name="publisher" value="{{ book.publisher or '' }}">
-          <input type="hidden" name="year" value="{{ book.year or '' }}">
-          <input type="hidden" name="style" value="{{ style }}">
-          <button type="submit">Use this book</button>
-        </form>
+            <form action="/confirm" method="post" class="inline-form">
+              <input type="hidden" name="title" value="{{ book.title }}">
+              <input type="hidden" name="authors" value="{{ ';'.join(book.authors) }}">
+              <input type="hidden" name="publisher" value="{{ book.publisher or '' }}">
+              <input type="hidden" name="place" value="{{ book.place or '' }}">
+              <input type="hidden" name="year" value="{{ book.year or '' }}">
+              <input type="hidden" name="style" value="{{ style }}">
+              <input type="hidden" name="cover_url" value="{{ book.cover_url or '' }}">
+              <button type="submit">Use this book</button>
+            </form>
+          </div>
+        </div>
       </div>
     {% endfor %}
   </div>
