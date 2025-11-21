@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>Manual book entry</h1>
+  <p class="subtitle">
+    Enter the book details yourself. FolioCite will generate a citation from the fields below.
+  </p>
+
+  <div class="card">
+    <form action="/cite" method="post">
+      <label for="title">Title</label>
+      <input
+        type="text"
+        id="title"
+        name="title"
+        placeholder="A life in the political history of Ghana: Memoirs of Alhaji Mumuni Bawumia"
+        required
+      >
+
+      <label for="authors">Authors (separate multiple authors with a semicolon “;”)</label>
+      <input
+        type="text"
+        id="authors"
+        name="authors"
+        placeholder="e.g. Mumuni Bawumia"
+      >
+
+      <label for="year">Year</label>
+      <input
+        type="text"
+        id="year"
+        name="year"
+        placeholder="e.g. 2004"
+      >
+
+      <label for="publisher">Publisher</label>
+      <input
+        type="text"
+        id="publisher"
+        name="publisher"
+        placeholder="e.g. Ghana University Press"
+      >
+
+      <label for="place">Place of publication</label>
+      <input
+        type="text"
+        id="place"
+        name="place"
+        placeholder="e.g. Accra"
+      >
+
+      <label for="style">Citation style</label>
+      <select id="style" name="style">
+        <option value="apa" {% if selected_style == "apa" %}selected{% endif %}>APA (7th)</option>
+        <option value="mla" {% if selected_style == "mla" %}selected{% endif %}>MLA (9th)</option>
+        <option value="chicago" {% if selected_style == "chicago" %}selected{% endif %}>Chicago</option>
+        <option value="harvard" {% if selected_style == "harvard" %}selected{% endif %}>Harvard</option>
+        <option value="vancouver" {% if selected_style == "vancouver" %}selected{% endif %}>Vancouver</option>
+      </select>
+
+      <input type="hidden" name="cover_url" value="">
+
+      <button type="submit">Generate citation</button>
+    </form>
+  </div>
+
+  <a href="/" class="back-link">&larr; Back to search</a>
+</div>
+{% endblock %}

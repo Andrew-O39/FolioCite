@@ -1,3 +1,4 @@
+/* ============= Base ============= */
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -5,47 +6,6 @@ body {
   margin: 0;
   padding: 0;
   color: #111827;
-}
-
-.site-header {
-  background: #1d4ed8;
-  color: white;
-  padding: 0.75rem 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.header-inner {
-  max-width: 960px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.logo {
-  height: 36px;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-
-.brand-name {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.brand-tagline {
-  font-size: 0.8rem;
-  opacity: 0.9;
 }
 
 main {
@@ -57,6 +17,113 @@ main {
   margin: 0 auto;
 }
 
+/* ============= Header & Navigation ============= */
+
+.site-header {
+  background: linear-gradient(90deg, #020617, #111827);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #1f2937;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.logo {
+  height: 36px;
+  width: 36px;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #ffffff; /* bright white */
+  letter-spacing: 0.03em;
+}
+
+.brand-tagline {
+  font-size: 0.85rem;
+  color: #d1d5db; /* light gray */
+}
+
+/* Nav links */
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.nav-links a {
+  color: #e5e7eb;
+  text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.nav-links a:hover {
+  background-color: rgba(249, 250, 251, 0.08);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Logout as link-style button */
+
+.link-button {
+  background: none;
+  border: none;
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.link-button:hover {
+  background-color: rgba(239, 68, 68, 0.16);
+  color: #fecaca;
+  transform: translateY(-1px);
+}
+
+nav form {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============= Typography & Layout ============= */
+
 h1 {
   font-size: 1.9rem;
   margin-bottom: 0.5rem;
@@ -67,6 +134,13 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
+.note {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* ============= Cards & Content Blocks ============= */
+
 .card {
   background: #ffffff;
   border-radius: 12px;
@@ -75,6 +149,12 @@ h1 {
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
 }
 
+.info-card h2 {
+  margin-top: 0;
+}
+
+/* ============= Form Elements ============= */
+
 label {
   display: block;
   margin-bottom: 0.5rem;
@@ -82,6 +162,8 @@ label {
 }
 
 input[type="text"],
+input[type="email"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
@@ -95,11 +177,15 @@ textarea {
 }
 
 input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
 select:focus,
 textarea:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
 }
+
+/* Buttons */
 
 button {
   background: #2563eb;
@@ -116,6 +202,33 @@ button:hover {
   background: #1d4ed8;
 }
 
+button[disabled] {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Links */
+
+.back-link {
+  display: inline-block;
+  margin-top: 1rem;
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Textarea */
+
+textarea {
+  resize: vertical;
+}
+
+/* ============= Alerts, Status, etc. ============= */
+
 .alert {
   background: #fee2e2;
   color: #b91c1c;
@@ -124,10 +237,13 @@ button:hover {
   margin-bottom: 1rem;
 }
 
-.note {
+.copy-status {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #4b5563;
+  margin-top: 0.5rem;
 }
+
+/* ============= Results & Citation Layout ============= */
 
 .results {
   display: grid;
@@ -143,44 +259,6 @@ button:hover {
   margin-top: 0.75rem;
 }
 
-.back-link {
-  display: inline-block;
-  margin-top: 1rem;
-  text-decoration: none;
-  color: #2563eb;
-  font-weight: 500;
-}
-
-.back-link:hover {
-  text-decoration: underline;
-}
-
-textarea {
-  resize: vertical;
-}
-
-.copy-status {
-  font-size: 0.9rem;
-  color: #4b5563;
-  margin-top: 0.5rem;
-}
-
-.info-card h2 {
-  margin-top: 0;
-}
-
-@media (max-width: 640px) {
-  main {
-    padding: 1.5rem 0.75rem;
-  }
-  .header-inner {
-    flex-direction: row;
-  }
-  .brand-name {
-    font-size: 1rem;
-  }
-}
-
 .result-layout {
   display: flex;
   gap: 1rem;
@@ -194,4 +272,32 @@ textarea {
 
 .result-main {
   flex: 1;
+}
+
+.citation-pretty {
+  margin-top: 0.5rem;
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+/* ============= Responsive ============= */
+
+@media (max-width: 640px) {
+  main {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .brand-name {
+    font-size: 1.2rem;
+  }
 }

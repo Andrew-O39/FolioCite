@@ -1,6 +1,8 @@
-
 fastapi
 uvicorn[standard]
 jinja2
 httpx
 python-multipart
+passlib[bcrypt]
+python-dotenv
+itsdangerous

@@ -21,6 +21,7 @@ class CitationStyle(str, Enum):
     mla = "mla"
     chicago = "chicago"
     harvard = "harvard"
+    vancouver = "vancouver"
 
 
 def format_citation(book: Book, style: CitationStyle) -> str:
@@ -35,9 +36,10 @@ def format_citation(book: Book, style: CitationStyle) -> str:
         return format_chicago(book)
     if style == CitationStyle.harvard:
         return format_harvard(book)
-    # Fallback (should not happen)
+    if style == CitationStyle.vancouver:
+        return format_vancouver(book)
+    # Fallback
     return format_apa(book)
-
 
 # --------- Helper functions for author formatting ---------
 
@@ -197,6 +199,84 @@ def _format_authors_harvard(authors: List[str]) -> str:
     # More than 3 authors: "FirstAuthor et al."
     return f"{parsed[0]} et al."
 
+def _format_authors_vancouver(authors: List[str]) -> str:
+    """
+    Very simplified Vancouver author list.
+
+    Pattern:
+    'Bawumia M' or 'Smith AB, Jones CD'
+
+    - Last word is treated as surname
+    - All preceding words give initials
+    """
+    parts = []
+    for name in authors:
+        tokens = [t.strip() for t in name.split() if t.strip()]
+        if not tokens:
+            continue
+        last = tokens[-1]
+        initials = "".join(t[0].upper() for t in tokens[:-1] if t)
+        if initials:
+            parts.append(f"{last} {initials}")
+        else:
+            parts.append(last)
+    return ", ".join(parts)
+
+def _format_authors_bibtex(authors: List[str]) -> str:
+    """
+    Format authors for BibTeX.
+
+    Very simple approach:
+    - Convert 'First Middle Last' to 'Last, First Middle'
+    - Join multiple authors with ' and '
+    """
+    formatted = []
+
+    for name in authors:
+        parts = [p.strip() for p in name.split() if p.strip()]
+        if not parts:
+            continue
+        if len(parts) == 1:
+            # Single word, treat as last name
+            formatted.append(parts[0])
+        else:
+            last = parts[-1]
+            first_names = " ".join(parts[:-1])
+            formatted.append(f"{last}, {first_names}")
+
+    return " and ".join(formatted)
+
+def _make_bibtex_key(book: Book) -> str:
+    """
+    Create a simple BibTeX key like 'Kahneman2011Thinking'.
+
+    - Use the last name of the first author (if available)
+    - Use the year (or 'n.d.')
+    - Use first word of the title (alphanumeric only)
+    """
+    # Author part
+    if book.authors:
+        first_author = book.authors[0].strip()
+        parts = first_author.split()
+        author_part = parts[-1] if parts else "key"
+    else:
+        author_part = "key"
+
+    # Year part
+    year_part = (book.year or "nd").strip()
+
+    # Title part: first word, stripped of non-alphanumerics
+    if book.title:
+        first_word = book.title.split()[0]
+        title_part = "".join(ch for ch in first_word if ch.isalnum())
+    else:
+        title_part = "ref"
+
+    # Combine and remove problematic characters
+    key = f"{author_part}{year_part}{title_part}"
+    key = "".join(ch for ch in key if ch.isalnum())
+    return key or "ref"
+
 
 # --------- Helper functions for title capitalization ---------
 
@@ -272,10 +352,8 @@ def _to_title_case(text: str) -> str:
 
 def format_apa(book: Book) -> str:
     """
-    Very simplified APA 7th edition style for books.
-
-    Pattern:
-    Author, A. A., & Author, B. B. (Year). Title in sentence case. Publisher.
+    APA (approx Google Scholar):
+    Bawumia, M. (2004). A life in the political history of Ghana: Memoirs of Alhaji Mumuni Bawumia. Ghana University Press.
     """
     authors = _format_authors_apa(book.authors)
     year = f"({book.year.strip()})." if book.year else "(n.d.)."
@@ -289,10 +367,8 @@ def format_apa(book: Book) -> str:
 
 def format_mla(book: Book) -> str:
     """
-    Very simplified MLA 9 style for books.
-
-    Pattern:
-    Last, First, et al. Title in Title Case. Publisher, Year.
+    MLA (approx Google Scholar):
+    Bawumia, Mumuni. A life in the political history of Ghana: Memoirs of Alhaji Mumuni Bawumia. Ghana University Press, 2004.
     """
     authors = _format_authors_mla(book.authors)
     raw_title = book.title.strip() if book.title else "[No title]"
@@ -314,71 +390,213 @@ def format_mla(book: Book) -> str:
 
 def format_chicago(book: Book) -> str:
     """
-    Very simplified Chicago author-date style for books.
+    Chicago (aligned with Google Scholar example for books):
 
-    Pattern (simplified):
-    Author(s). Year. Title in sentence case. Place: Publisher.
-    If place is missing, just use Publisher.
+    Bawumia, Mumuni. A life in the political history of Ghana: Memoirs of Alhaji Mumuni Bawumia. Ghana University Press, 2004.
     """
     authors = _format_authors_chicago(book.authors)
     year = book.year.strip() if book.year else "n.d."
     raw_title = book.title.strip() if book.title else "[No title]"
     title = _to_sentence_case(raw_title)
     publisher = book.publisher.strip() if book.publisher else ""
-    place = book.place.strip() if book.place else ""
 
     pieces = []
     if authors:
         pieces.append(f"{authors}.")
-    pieces.append(year + ".")
     pieces.append(f"{title}.")
-
-    # Build "Place: Publisher." or just "Publisher." or just "Place."
-    pub_part = ""
-    if place and publisher:
-        pub_part = f"{place}: {publisher}."
-    elif publisher:
-        pub_part = f"{publisher}."
-    elif place:
-        pub_part = f"{place}."
-
-    if pub_part:
-        pieces.append(pub_part)
+    if publisher or year:
+        # "Publisher, Year." / "Publisher." / "Year."
+        tail = ""
+        if publisher and year:
+            tail = f"{publisher}, {year}."
+        elif publisher:
+            tail = f"{publisher}."
+        else:
+            tail = f"{year}."
+        pieces.append(tail)
 
     return " ".join(pieces)
 
 
 def format_harvard(book: Book) -> str:
     """
-    Very simplified Harvard style for books.
-
-    Approximate pattern:
-    Surname, Initial. (Year) Title in sentence case. Place: Publisher.
-
-    If place is missing, just use Publisher.
+    Harvard (approx Google Scholar):
+    Bawumia, M., 2004. A life in the political history of Ghana: Memoirs of Alhaji Mumuni Bawumia. Ghana University Press.
     """
     authors = _format_authors_harvard(book.authors)
     year = book.year.strip() if book.year else "n.d."
     raw_title = book.title.strip() if book.title else "[No title]"
     title = _to_sentence_case(raw_title)
     publisher = book.publisher.strip() if book.publisher else ""
-    place = book.place.strip() if book.place else ""
 
-    # Build "Place: Publisher." or just "Publisher." or just "Place."
-    pub_part = ""
-    if place and publisher:
-        pub_part = f"{place}: {publisher}."
-    elif publisher:
-        pub_part = f"{publisher}."
-    elif place:
-        pub_part = f"{place}."
+    pieces = []
+    if authors:
+        pieces.append(f"{authors},")
+    pieces.append(f"{year}.")
+    pieces.append(f"{title}.")
+    if publisher:
+        pieces.append(f"{publisher}.")
+
+    return " ".join(pieces)
+
+
+def format_vancouver(book: Book) -> str:
+    """
+    Vancouver (approx Google Scholar):
+    Bawumia M. A life in the political history of Ghana: Memoirs of Alhaji Mumuni Bawumia. Ghana University Press; 2004.
+    """
+    authors = _format_authors_vancouver(book.authors)
+    raw_title = book.title.strip() if book.title else "[No title]"
+    # Vancouver typically uses sentence case for titles
+    title = _to_sentence_case(raw_title)
+    publisher = book.publisher.strip() if book.publisher else ""
+    year = book.year.strip() if book.year else ""
 
     pieces = []
     if authors:
         pieces.append(f"{authors}.")
-    pieces.append(f"({year})")
     pieces.append(f"{title}.")
-    if pub_part:
-        pieces.append(pub_part)
+    if publisher or year:
+        tail = ""
+        if publisher and year:
+            tail = f"{publisher}; {year}."
+        elif publisher:
+            tail = f"{publisher}."
+        else:
+            tail = f"{year}."
+        pieces.append(tail)
 
     return " ".join(pieces)
+
+
+def format_bibtex(book: Book) -> str:
+    """
+    Build a simple BibTeX @book entry from a Book.
+
+    Example:
+
+    @book{Kahneman2011Thinking,
+      author    = {Kahneman, Daniel},
+      title     = {Thinking, fast and slow},
+      year      = {2011},
+      publisher = {Farrar, Straus and Giroux},
+      address   = {London},
+    }
+    """
+    key = _make_bibtex_key(book)
+    author_field = _format_authors_bibtex(book.authors) if book.authors else ""
+    title = book.title.strip() if book.title else "[No title]"
+    year = book.year.strip() if book.year else ""
+    publisher = book.publisher.strip() if book.publisher else ""
+    address = book.place.strip() if book.place else ""
+
+    lines = [f"@book{{{key},"]
+
+    if author_field:
+        lines.append(f"  author    = {{{author_field}}},")
+    if title:
+        lines.append(f"  title     = {{{title}}},")
+    if year:
+        lines.append(f"  year      = {{{year}}},")
+    if publisher:
+        lines.append(f"  publisher = {{{publisher}}},")
+    if address:
+        lines.append(f"  address   = {{{address}}},")
+
+    lines.append("}")
+
+    return "\n".join(lines)
+
+
+def format_citation_html(book: Book, style: CitationStyle) -> str:
+    """
+    HTML version of the citation with <em> for book titles.
+    Vancouver is kept without italics to match typical style.
+    """
+    # We'll reuse the same patterns but wrap the title in <em> for all styles except Vancouver.
+    import html
+
+    raw_title = book.title.strip() if book.title else "[No title]"
+    # Use appropriate casing helpers
+    if style == CitationStyle.mla:
+        title_text = _to_title_case(raw_title)
+    else:
+        title_text = _to_sentence_case(raw_title)
+
+    title_html = f"<em>{html.escape(title_text)}</em>"
+
+    # Build for each style
+    if style == CitationStyle.apa:
+        authors = html.escape(_format_authors_apa(book.authors))
+        year = html.escape(book.year.strip()) if book.year else "n.d."
+        publisher = html.escape(book.publisher.strip()) if book.publisher else ""
+        parts = [authors, f"({year}).", f"{title_html}.", publisher]
+        return " ".join(p for p in parts if p)
+
+    if style == CitationStyle.mla:
+        authors = html.escape(_format_authors_mla(book.authors))
+        publisher = html.escape(book.publisher.strip()) if book.publisher else ""
+        year = html.escape(book.year.strip()) if book.year else ""
+        pieces = []
+        if authors:
+            pieces.append(f"{authors}.")
+        pieces.append(f"{title_html}.")
+        if publisher:
+            pieces.append(publisher + ",")
+        if year:
+            pieces.append(year + ".")
+        return " ".join(pieces)
+
+    if style == CitationStyle.chicago:
+        authors = html.escape(_format_authors_chicago(book.authors))
+        year = html.escape(book.year.strip()) if book.year else "n.d."
+        publisher = html.escape(book.publisher.strip()) if book.publisher else ""
+        pieces = []
+        if authors:
+            pieces.append(f"{authors}.")
+        pieces.append(f"{title_html}.")
+        if publisher or year:
+            if publisher and year:
+                tail = f"{publisher}, {year}."
+            elif publisher:
+                tail = f"{publisher}."
+            else:
+                tail = f"{year}."
+            pieces.append(tail)
+        return " ".join(pieces)
+
+    if style == CitationStyle.harvard:
+        authors = html.escape(_format_authors_harvard(book.authors))
+        year = html.escape(book.year.strip()) if book.year else "n.d."
+        publisher = html.escape(book.publisher.strip()) if book.publisher else ""
+        pieces = []
+        if authors:
+            pieces.append(f"{authors},")
+        pieces.append(f"{year}.")
+        pieces.append(f"{title_html}.")
+        if publisher:
+            pieces.append(f"{publisher}.")
+        return " ".join(pieces)
+
+    if style == CitationStyle.vancouver:
+        # No italics for Vancouver – plain title
+        authors = html.escape(_format_authors_vancouver(book.authors))
+        title = html.escape(_to_sentence_case(raw_title))
+        publisher = html.escape(book.publisher.strip()) if book.publisher else ""
+        year = html.escape(book.year.strip()) if book.year else ""
+        pieces = []
+        if authors:
+            pieces.append(f"{authors}.")
+        pieces.append(f"{title}.")
+        if publisher or year:
+            if publisher and year:
+                tail = f"{publisher}; {year}."
+            elif publisher:
+                tail = f"{publisher}."
+            else:
+                tail = f"{year}."
+            pieces.append(tail)
+        return " ".join(pieces)
+
+    # Fallback to plain text if something unexpected happens
+    return html.escape(format_citation(book, style))

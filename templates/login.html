@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>Login</h1>
+  <p class="subtitle">Sign in to access your saved bibliography.</p>
+
+  {% if error %}
+    <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <form action="/login" method="post">
+      <label for="username">Username</label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="yourusername"
+        value="{{ username or '' }}"
+        required
+      >
+
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        required
+      >
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <p class="note">
+    Don't have an account yet? <a href="/register">Register here</a>.
+  </p>
+</div>
+{% endblock %}

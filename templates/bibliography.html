@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>My Bibliography</h1>
+  <p class="subtitle">
+    Citations you have added in this session, sorted alphabetically in the selected style.
+    You can copy the list below and paste it directly into your project.
+  </p>
+
+  {% if not entries %}
+    <p class="note">
+      Your bibliography is currently empty. Generate a citation and click
+      <strong>"Add to My Bibliography"</strong> to start building it.
+    </p>
+    <a href="/" class="back-link">&larr; Go to search</a>
+  {% else %}
+
+    <!-- Style selector -->
+    <div class="card" style="margin-bottom: 1rem;">
+      <form action="/bibliography" method="get" class="inline-form">
+        <label for="style">Display style:</label>
+        <select id="style" name="style">
+          <option value="apa" {% if current_style == "apa" %}selected{% endif %}>APA</option>
+          <option value="mla" {% if current_style == "mla" %}selected{% endif %}>MLA</option>
+          <option value="chicago" {% if current_style == "chicago" %}selected{% endif %}>Chicago</option>
+          <option value="harvard" {% if current_style == "harvard" %}selected{% endif %}>Harvard</option>
+          <option value="vancouver" {% if current_style == "vancouver" %}selected{% endif %}>Vancouver</option>
+        </select>
+        <button type="submit">Apply</button>
+      </form>
+    </div>
+
+    <!-- Combined textarea for copy-all -->
+    <div class="card">
+      <label for="biblio-text">Your bibliography (plain text, {{ current_style|capitalize }})</label>
+      <textarea id="biblio-text" readonly rows="10">
+{% for entry in entries %}{{ entry.citation }}{% if not loop.last %}
+{% endif %}{% endfor %}</textarea>
+      <button id="copy-biblio-btn" type="button">Copy all</button>
+      <p id="copy-biblio-status" class="copy-status"></p>
+    </div>
+
+    <!-- Controls: clear & export -->
+    <div class="card">
+      <form action="/bibliography/clear" method="post" style="display:inline;">
+        <button type="submit">Clear My Bibliography</button>
+      </form>
+
+      <a href="/bibliography/export.txt?style={{ current_style }}" class="back-link" style="margin-left: 1rem;">
+        Export as .txt
+      </a>
+      <a href="/bibliography/export.bib?style={{ current_style }}" class="back-link" style="margin-left: 1rem;">
+        Export as .bib
+      </a>
+    </div>
+
+    <!-- Individual entries with delete buttons -->
+    <div class="card">
+      <h2>Entries</h2>
+      <ol>
+        {% for entry in entries %}
+          <li style="margin-bottom: 0.5rem;">
+            <span>{{ entry.citation }}</span>
+            <form action="/bibliography/delete" method="post" style="display:inline; margin-left: 0.5rem;">
+              <input type="hidden" name="entry_id" value="{{ entry.id }}">
+              <button type="submit" style="font-size: 0.8rem;">Delete</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+
+    <a href="/" class="back-link">&larr; Add more books</a>
+  {% endif %}
+</div>
+
+<script>
+  const biblioBtn = document.getElementById('copy-biblio-btn');
+  const biblioTextarea = document.getElementById('biblio-text');
+  const biblioStatus = document.getElementById('copy-biblio-status');
+
+  if (biblioBtn && biblioTextarea && navigator.clipboard) {
+    biblioBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(biblioTextarea.value.trim());
+        biblioStatus.textContent = "Bibliography copied!";
+      } catch (err) {
+        biblioStatus.textContent = "Could not copy automatically. Please select and copy manually.";
+      }
+    });
+  }
+</script>
+{% endblock %}

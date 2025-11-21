@@ -9,21 +9,35 @@
     <div class="alert">{{ error }}</div>
   {% endif %}
 
-  <form action="/search" method="post" class="card">
-    <label for="query">Book title, author, or ISBN</label>
-    <input type="text" id="query" name="query" placeholder="e.g. Thinking, Fast and Slow" required>
+  <form id="search-form" action="/search" method="post" class="card">
+  <label for="query">Book title, author, or ISBN</label>
+  <input type="text" id="query" name="query" placeholder="e.g. Thinking, Fast and Slow" required>
 
-    <label for="style">Citation style</label>
-    <select id="style" name="style">
-      <option value="apa" {% if selected_style == "apa" %}selected{% endif %}>APA (7th)</option>
-      <option value="mla" {% if selected_style == "mla" %}selected{% endif %}>MLA (9th)</option>
-      <option value="chicago" {% if selected_style == "chicago" %}selected{% endif %}>Chicago (author-date)</option>
-      <option value="harvard" {% if selected_style == "harvard" %}selected{% endif %}>Harvard</option>
-    </select>
+  <label for="style">Citation style</label>
+  <select id="style" name="style">
+    <option value="apa" {% if selected_style == "apa" %}selected{% endif %}>APA (7th)</option>
+    <option value="mla" {% if selected_style == "mla" %}selected{% endif %}>MLA (9th)</option>
+    <option value="chicago" {% if selected_style == "chicago" %}selected{% endif %}>Chicago</option>
+    <option value="harvard" {% if selected_style == "harvard" %}selected{% endif %}>Harvard</option>
+    <option value="vancouver" {% if selected_style == "vancouver" %}selected{% endif %}>Vancouver</option>
+  </select>
 
-    <button type="submit">Search</button>
+  <button id="search-btn" type="submit">Search</button>
   </form>
 
   <p class="note">FolioCite is an early prototype. Always double-check your final references against your institution's guidelines.</p>
 </div>
+
+<script>
+  const searchForm = document.getElementById('search-form');
+  const searchBtn = document.getElementById('search-btn');
+
+  if (searchForm && searchBtn) {
+    searchForm.addEventListener('submit', () => {
+      // prevent double clicks & show feedback
+      searchBtn.disabled = true;
+      searchBtn.textContent = 'Searching...';
+    });
+  }
+</script>
 {% endblock %}

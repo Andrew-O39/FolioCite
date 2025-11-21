@@ -4,12 +4,51 @@
 <div class="container">
   <h1>Your citation</h1>
 
-  <div class="card">
-    <label for="citation">Formatted reference</label>
-    <textarea id="citation" readonly rows="4">{{ citation }}</textarea>
-    <button id="copy-btn" type="button">Copy to clipboard</button>
-    <p id="copy-status" class="copy-status"></p>
-  </div>
+<div class="card">
+  <label for="citation">Formatted reference</label>
+  <textarea id="citation" readonly rows="4">{{ citation }}</textarea>
+  <button id="copy-btn" type="button">Copy to clipboard</button>
+  <p id="copy-status" class="copy-status"></p>
+</div>
+
+<div class="card">
+  <label>
+  Formatted reference
+  {% if style == "vancouver" %}
+    (no italics)
+  {% else %}
+    (with italics)
+  {% endif %}
+  </label>
+
+  <p class="citation-pretty" id="citation-html">{{ citation_html|safe }}</p>
+  <button id="copy-html-btn" type="button">Copy formatted version</button>
+  <p id="copy-html-status" class="copy-status"></p>
+</div>
+
+<div class="card">
+  <form action="/bibliography/add" method="post" class="inline-form">
+    <input type="hidden" name="title" value="{{ book.title }}">
+    <input type="hidden" name="authors" value="{{ ';'.join(book.authors) }}">
+    <input type="hidden" name="year" value="{{ book.year or '' }}">
+    <input type="hidden" name="publisher" value="{{ book.publisher or '' }}">
+    <input type="hidden" name="place" value="{{ book.place or '' }}">
+    <input type="hidden" name="style" value="{{ style }}">
+    <input type="hidden" name="cover_url" value="{{ book.cover_url or '' }}">
+
+    <button type="submit">Add to My Bibliography</button>
+    <a href="/bibliography" class="back-link" style="margin-left: 0.75rem;">
+      View My Bibliography
+    </a>
+  </form>
+</div>
+
+<div class="card">
+  <label for="bibtex">BibTeX entry</label>
+  <textarea id="bibtex" readonly rows="6">{{ bibtex }}</textarea>
+  <button id="copy-bibtex-btn" type="button">Copy BibTeX</button>
+  <p id="copy-bibtex-status" class="copy-status"></p>
+</div>
 
   <div class="card info-card">
   <h2>Source details</h2>
@@ -40,13 +79,27 @@
       Chicago (author-date)
     {% elif style == "harvard" %}
       Harvard
+    {% elif style == "vancouver" %}
+      Vancouver
     {% else %}
       {{ style }}
     {% endif %}
   </p>
 </div>
+  <a href="/" class="btn" style="
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    background-color: #0077cc;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-bottom: 1rem;
+">
+  New search
+</a>
 
 <script>
+  // Copy plain-text citation
   const btn = document.getElementById('copy-btn');
   const textarea = document.getElementById('citation');
   const status = document.getElementById('copy-status');
@@ -58,6 +111,44 @@
         status.textContent = "Copied!";
       } catch (err) {
         status.textContent = "Could not copy automatically. Please select and copy manually.";
+      }
+    });
+  }
+
+  // Copy BibTeX
+  const bibtexBtn = document.getElementById('copy-bibtex-btn');
+  const bibtexTextarea = document.getElementById('bibtex');
+  const bibtexStatus = document.getElementById('copy-bibtex-status');
+
+  if (bibtexBtn && bibtexTextarea && navigator.clipboard) {
+    bibtexBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(bibtexTextarea.value);
+        bibtexStatus.textContent = "BibTeX copied!";
+      } catch (err) {
+        bibtexStatus.textContent = "Could not copy automatically. Please select and copy manually.";
+      }
+    });
+  }
+
+  // Copy formatted HTML citation
+  const htmlBtn = document.getElementById('copy-html-btn');
+  const htmlCitation = document.getElementById('citation-html');
+  const htmlStatus = document.getElementById('copy-html-status');
+
+  if (htmlBtn && htmlCitation && navigator.clipboard) {
+    htmlBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": new Blob([htmlCitation.innerHTML], { type: "text/html" }),
+            "text/plain": new Blob([htmlCitation.innerText], { type: "text/plain" })
+          })
+        ]);
+
+        htmlStatus.textContent = "Formatted version copied!";
+      } catch (err) {
+        htmlStatus.textContent = "Could not copy automatically. Please select and copy manually.";
       }
     });
   }
