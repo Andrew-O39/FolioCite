@@ -19,7 +19,7 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
 
-    # Users table
+    # Users table (unchanged)
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -38,7 +38,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS bibliography (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
-            entry_type TEXT NOT NULL, -- "book" or "article"
+            entry_type TEXT NOT NULL, -- "book", "article", or "website"
             title TEXT NOT NULL,
             authors TEXT NOT NULL,    -- semicolon-separated
             year TEXT,
@@ -49,16 +49,15 @@ def init_db():
             issue TEXT,
             pages TEXT,
             doi TEXT,
+            site_name TEXT,
+            url TEXT,
+            accessed TEXT,
             style TEXT NOT NULL,
             cover_url TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """
     )
-
-    conn.commit()
-    conn.close()
-
 
 # ---------- User helpers ----------
 
@@ -104,13 +103,14 @@ def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
     conn.close()
     return row
 
-
 # ---------- Bibliography helpers (per user) ----------
 
 def add_entry(user_id: int, data: Dict[str, Any]) -> int:
     """
     data keys: entry_type, title, authors (semicolon string),
-               year, publisher, place, journal, volume, issue, pages, doi,
+               year, publisher, place,
+               journal, volume, issue, pages, doi,
+               site_name, url, accessed,
                style, cover_url
     """
     conn = get_connection()
@@ -118,11 +118,25 @@ def add_entry(user_id: int, data: Dict[str, Any]) -> int:
     cur.execute(
         """
         INSERT INTO bibliography (
-            user_id, entry_type, title, authors, year,
-            publisher, place, journal, volume, issue, pages, doi,
-            style, cover_url
+            user_id,
+            entry_type,
+            title,
+            authors,
+            year,
+            publisher,
+            place,
+            journal,
+            volume,
+            issue,
+            pages,
+            doi,
+            site_name,
+            url,
+            accessed,
+            style,
+            cover_url
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             user_id,
@@ -137,6 +151,9 @@ def add_entry(user_id: int, data: Dict[str, Any]) -> int:
             data.get("issue"),
             data.get("pages"),
             data.get("doi"),
+            data.get("site_name"),
+            data.get("url"),
+            data.get("accessed"),
             data["style"],
             data.get("cover_url"),
         ),
@@ -146,14 +163,21 @@ def add_entry(user_id: int, data: Dict[str, Any]) -> int:
     conn.close()
     return entry_id
 
-
-def get_all_entries(user_id: int) -> List[sqlite3.Row]:
+def get_all_entries(user_id: int, entry_type: Optional[str] = None) -> List[sqlite3.Row]:
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM bibliography WHERE user_id = ?",
-        (user_id,),
-    )
+
+    if entry_type and entry_type != "all":
+        cur.execute(
+            "SELECT * FROM bibliography WHERE user_id = ? AND entry_type = ?",
+            (user_id, entry_type),
+        )
+    else:
+        cur.execute(
+            "SELECT * FROM bibliography WHERE user_id = ?",
+            (user_id,),
+        )
+
     rows = cur.fetchall()
     conn.close()
     return rows

@@ -3,7 +3,7 @@
 <div class="container">
   <h1>Manual source entry</h1>
   <p class="subtitle">
-    Enter the details of a book or journal article manually. FolioCite will
+    Enter the details of a book, journal article, or website manually. FolioCite will
     format the citation for you.
   </p>
 
@@ -14,6 +14,7 @@
       <select id="entry_type" name="entry_type">
         <option value="book" {% if source_type == "book" %}selected{% endif %}>Book</option>
         <option value="article" {% if source_type == "article" %}selected{% endif %}>Journal article</option>
+        <option value="website" {% if source_type == "website" %}selected{% endif %}>Website</option>
       </select>
 
       <!-- Common fields -->
@@ -104,6 +105,33 @@
         >
       </div>
 
+      <!-- Website-specific fields -->
+      <div id="website-fields" style="display:none;">
+        <label for="site_name">Website / organisation name</label>
+        <input
+          type="text"
+          id="site_name"
+          name="site_name"
+          placeholder="e.g. World Health Organization"
+        >
+
+        <label for="url">URL</label>
+        <input
+          type="text"
+          id="url"
+          name="url"
+          placeholder="e.g. https://www.example.com/page"
+        >
+
+        <label for="accessed">Accessed date</label>
+        <input
+          type="text"
+          id="accessed"
+          name="accessed"
+          placeholder="e.g. 24 Nov 2025"
+        >
+      </div>
+
       <!-- Citation style -->
       <label for="style">Citation style</label>
       <select id="style" name="style">
@@ -129,21 +157,28 @@
     const typeSelect = document.getElementById('entry_type');
     const bookFields = document.getElementById('book-fields');
     const articleFields = document.getElementById('article-fields');
+    const websiteFields = document.getElementById('website-fields');
 
     function updateFields() {
       const value = typeSelect.value;
       if (value === 'article') {
         bookFields.style.display = 'none';
         articleFields.style.display = 'block';
+        websiteFields.style.display = 'none';
+      } else if (value === 'website') {
+        bookFields.style.display = 'none';
+        articleFields.style.display = 'none';
+        websiteFields.style.display = 'block';
       } else {
+        // book
         bookFields.style.display = 'block';
         articleFields.style.display = 'none';
+        websiteFields.style.display = 'none';
       }
     }
 
-    if (typeSelect && bookFields && articleFields) {
+    if (typeSelect && bookFields && articleFields && websiteFields) {
       typeSelect.addEventListener('change', updateFields);
-      // Initialize on page load based on current value
       updateFields();
     }
   })();

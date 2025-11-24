@@ -74,7 +74,9 @@ main {
   color: #d1d5db; /* light gray */
 }
 
-/* Nav links */
+/* -------------------------------------------------------
+   Navigation Bar
+   ------------------------------------------------------- */
 
 .nav-links {
   display: flex;
@@ -83,26 +85,41 @@ main {
   font-size: 0.9rem;
 }
 
-.nav-links a {
+/* Base style for nav links */
+.nav-links a,
+.nav-links .link-button {
   color: #e5e7eb;
   text-decoration: none;
-  padding: 0.3rem 0.6rem;
+  padding: 0.32rem 0.75rem;
   border-radius: 999px;
-  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
 }
 
-.nav-links a:hover {
-  background-color: rgba(249, 250, 251, 0.08);
+/* Hover effect */
+.nav-links a:hover,
+.nav-links .link-button:hover {
+  background-color: rgba(249, 250, 251, 0.1);
   color: #ffffff;
   transform: translateY(-1px);
 }
-.nav-links a.nav-link-active {
-  background-color: rgba(59, 130, 246, 0.25); /* blue pill highlight */
+
+/* Active/highlighted page */
+.nav-links a.nav-link-active,
+.nav-links .link-button.nav-link-active {
+  background-color: rgba(59, 130, 246, 0.25); /* pill highlight */
   color: #ffffff;
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
 }
 
-.nav-links a.nav-link-active:hover {
+.nav-links a.nav-link-active:hover,
+.nav-links .link-button.nav-link-active:hover {
   background-color: rgba(59, 130, 246, 0.35);
 }
 /* Logout as link-style button */

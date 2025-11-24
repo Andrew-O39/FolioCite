@@ -17,26 +17,27 @@
 
     <!-- Style + filter selector -->
     <div class="card" style="margin-bottom: 1rem;">
-      <form action="/bibliography" method="get" class="inline-form">
-        <label for="style">Display style:</label>
-        <select id="style" name="style">
-          <option value="apa" {% if current_style == "apa" %}selected{% endif %}>APA</option>
-          <option value="mla" {% if current_style == "mla" %}selected{% endif %}>MLA</option>
-          <option value="chicago" {% if current_style == "chicago" %}selected{% endif %}>Chicago</option>
-          <option value="harvard" {% if current_style == "harvard" %}selected{% endif %}>Harvard</option>
-          <option value="vancouver" {% if current_style == "vancouver" %}selected{% endif %}>Vancouver</option>
-        </select>
+  <form action="/bibliography" method="get" class="inline-form">
+    <label for="filter_type">Show:</label>
+    <select id="filter_type" name="filter_type">
+      <option value="all" {% if current_filter == "all" %}selected{% endif %}>All</option>
+      <option value="book" {% if current_filter == "book" %}selected{% endif %}>Books only</option>
+      <option value="article" {% if current_filter == "article" %}selected{% endif %}>Articles only</option>
+      <option value="website" {% if current_filter == "website" %}selected{% endif %}>Websites only</option>
+    </select>
 
-        <label for="filter" style="margin-left: 1rem;">Filter:</label>
-        <select id="filter" name="filter">
-          <option value="all" {% if current_filter == "all" %}selected{% endif %}>All</option>
-          <option value="book" {% if current_filter == "book" %}selected{% endif %}>Books only</option>
-          <option value="article" {% if current_filter == "article" %}selected{% endif %}>Articles only</option>
-        </select>
+    <label for="style" style="margin-left: 0.75rem;">Style:</label>
+    <select id="style" name="style">
+      <option value="apa" {% if current_style == "apa" %}selected{% endif %}>APA</option>
+      <option value="mla" {% if current_style == "mla" %}selected{% endif %}>MLA</option>
+      <option value="chicago" {% if current_style == "chicago" %}selected{% endif %}>Chicago</option>
+      <option value="harvard" {% if current_style == "harvard" %}selected{% endif %}>Harvard</option>
+      <option value="vancouver" {% if current_style == "vancouver" %}selected{% endif %}>Vancouver</option>
+    </select>
 
-        <button type="submit" style="margin-left: 1rem;">Apply</button>
-      </form>
-    </div>
+    <button type="submit" style="margin-left: 0.75rem;">Apply</button>
+  </form>
+</div>
 
     <!-- Combined textarea for copy-all -->
     <div class="card">
@@ -72,10 +73,12 @@
           <li style="margin-bottom: 0.5rem;">
             {% if entry.entry_type == "article" %}
               <span>[Article] </span>
+            {% elif entry.entry_type == "website" %}
+              <span>[Website] </span>
             {% else %}
               <span>[Book] </span>
             {% endif %}
-            <span>{{ entry.citation }}</span>
+              <span>{{ entry.citation }}</span>
             <form action="/bibliography/delete" method="post" style="display:inline; margin-left: 0.5rem;">
               <input type="hidden" name="entry_id" value="{{ entry.id }}">
               <button type="submit" style="font-size: 0.8rem;">Delete</button>

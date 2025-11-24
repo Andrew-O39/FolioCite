@@ -30,13 +30,16 @@
   <!-- Add to bibliography -->
   <div class="card">
     <form action="/bibliography/add" method="post" class="inline-form">
-      <!-- What kind of source is this? "book" or "article" -->
+      <!-- What kind of source is this? "book", "article", or "website" -->
       <input type="hidden" name="entry_type" value="{{ entry_type }}">
 
       <!-- Common fields -->
       <input type="hidden" name="title" value="{{ source.title }}">
-      <input type="hidden" name="authors"
-             value="{{ ';'.join(source.authors or []) }}">
+      <input
+        type="hidden"
+        name="authors"
+        value="{{ ';'.join(source.authors or []) }}"
+      >
       <input type="hidden" name="year" value="{{ source.year or '' }}">
       <input type="hidden" name="style" value="{{ style }}">
 
@@ -52,10 +55,15 @@
         <input type="hidden" name="pages" value="">
         <input type="hidden" name="doi" value="">
 
+        <!-- Website fields empty for books -->
+        <input type="hidden" name="site_name" value="">
+        <input type="hidden" name="url" value="">
+        <input type="hidden" name="accessed" value="">
+
         <!-- Cover only for books -->
         <input type="hidden" name="cover_url" value="{{ source.cover_url or '' }}">
 
-      {% else %}
+      {% elif entry_type == "article" %}
         <!-- Article-specific fields -->
         <input type="hidden" name="journal" value="{{ source.journal or '' }}">
         <input type="hidden" name="volume" value="{{ source.volume or '' }}">
@@ -67,6 +75,29 @@
         <input type="hidden" name="publisher" value="">
         <input type="hidden" name="place" value="">
         <input type="hidden" name="cover_url" value="">
+
+        <!-- Website fields empty for articles -->
+        <input type="hidden" name="site_name" value="">
+        <input type="hidden" name="url" value="">
+        <input type="hidden" name="accessed" value="">
+
+      {% elif entry_type == "website" %}
+        <!-- Website-specific fields -->
+        <input type="hidden" name="site_name" value="{{ source.site_name or '' }}">
+        <input type="hidden" name="url" value="{{ source.url or '' }}">
+        <input type="hidden" name="accessed" value="{{ source.accessed or '' }}">
+
+        <!-- Book fields empty for websites -->
+        <input type="hidden" name="publisher" value="">
+        <input type="hidden" name="place" value="">
+        <input type="hidden" name="cover_url" value="">
+
+        <!-- Article fields empty for websites -->
+        <input type="hidden" name="journal" value="">
+        <input type="hidden" name="volume" value="">
+        <input type="hidden" name="issue" value="">
+        <input type="hidden" name="pages" value="">
+        <input type="hidden" name="doi" value="">
       {% endif %}
 
       <button type="submit">Add to My Bibliography</button>
@@ -89,6 +120,8 @@
     <h2>
       {% if entry_type == "article" %}
         Article details
+      {% elif entry_type == "website" %}
+        Website details
       {% else %}
         Book details
       {% endif %}
@@ -140,6 +173,26 @@
       {% endif %}
       {% if source.doi %}
         <p><strong>DOI:</strong> {{ source.doi }}</p>
+      {% endif %}
+    {% endif %}
+
+    {# Website-specific #}
+    {% if entry_type == "website" %}
+      {% if source.site_name %}
+        <p><strong>Website:</strong> {{ source.site_name }}</p>
+      {% endif %}
+      {% if source.url %}
+        <p><strong>URL:</strong>
+          <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">
+            {{ source.url }}
+          </a>
+        </p>
+      {% endif %}
+      {% if source.accessed %}
+        <p><strong>Accessed:</strong> {{ source.accessed }}</p>
+      {% endif %}
+      {% if source.year %}
+        <p><strong>Year:</strong> {{ source.year }}</p>
       {% endif %}
     {% endif %}
 

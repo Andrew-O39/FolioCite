@@ -18,6 +18,12 @@ from journal_citation import (
     format_article_citation_html,
     format_article_bibtex,
 )
+from website_citation import (
+    Website,
+    format_website_citation,
+    format_website_citation_html,
+    format_website_bibtex,
+)
 from services import search_books
 from journal_services import search_articles
 import db
@@ -341,7 +347,7 @@ async def manual_entry(
 @app.post("/cite", response_class=HTMLResponse)
 async def cite(
     request: Request,
-    entry_type: str = Form(...),   # "book" or "article"
+    entry_type: str = Form(...),   # "book" | "article" | "website"
     title: str = Form(...),
     authors: str = Form(...),
     year: str = Form(None),
@@ -352,31 +358,22 @@ async def cite(
     issue: str = Form(None),
     pages: str = Form(None),
     doi: str = Form(None),
+    site_name: str = Form(None),
+    url: str = Form(None),
+    accessed: str = Form(None),
     style: str = Form(...),
     cover_url: str = Form(None),
 ):
     """
-    Generate a formatted citation for the selected source (book or article).
+    Generate a formatted citation for the selected source (book, article, or website).
     """
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
-    # Normalize / validate entry_type
-    entry_type = (entry_type or "book").lower()
-    if entry_type not in ("book", "article"):
-        entry_type = "book"
-
     authors_list = [a.strip() for a in authors.split(";") if a.strip()]
+    chosen_style = CitationStyle(style)
 
-    # Style safety
-    try:
-        chosen_style = CitationStyle(style)
-    except ValueError:
-        chosen_style = CitationStyle.apa
-        style = "apa"
-
-    # --- Build source + format citation ---
     if entry_type == "article":
         source = Article(
             title=title,
@@ -391,8 +388,21 @@ async def cite(
         citation = format_article_citation(source, chosen_style)
         citation_html = format_article_citation_html(source, chosen_style)
         bibtex = format_article_bibtex(source)
-    else:
-        # book
+
+    elif entry_type == "website":
+        source = Website(
+            title=title,
+            authors=authors_list,
+            year=year or None,
+            site_name=site_name or None,
+            url=url or "",
+            accessed=accessed or None,
+        )
+        citation = format_website_citation(source, chosen_style)
+        citation_html = format_website_citation_html(source, chosen_style)
+        bibtex = format_website_bibtex(source)
+
+    else:  # default to book
         source = Book(
             title=title,
             authors=authors_list,
@@ -409,48 +419,43 @@ async def cite(
         "citation.html",
         {
             "request": request,
-            "entry_type": entry_type,     # for buttons / labels
-            "source_type": entry_type,    # for details card logic
+            "entry_type": entry_type,
             "citation": citation,
             "citation_html": citation_html,
             "bibtex": bibtex,
             "style": style,
-            "source": source,             # Book or Article
-            "cover_url": cover_url or "",
+            "source": source,  # Book, Article or Website
             "current_user": current_user,
         },
     )
 
+from typing import Optional
+from fastapi import Query
 
 @app.get("/bibliography", response_class=HTMLResponse)
 async def show_bibliography(
     request: Request,
     style: str = Query("apa"),
-    entry_filter: str = Query("all", alias="filter"),  # "all", "book", or "article"
+    filter_type: str = Query("all"),  # "all" | "book" | "article" | "website"
 ):
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
-    # Normalise filter
-    if entry_filter not in ("all", "book", "article"):
-        entry_filter = "all"
-
+    # Load all rows for this user from the DB
     rows = db.get_all_entries(current_user.id)
 
-    # Optional filtering on entry_type
-    if entry_filter != "all":
-        filtered_rows = []
-        for row in rows:
-            # Treat missing entry_type as "book" for backwards compatibility
-            row_type = row.get("entry_type") if isinstance(row, dict) else row["entry_type"]
-            if not row_type:
-                row_type = "book"
-            if row_type == entry_filter:
-                filtered_rows.append(row)
-        rows = filtered_rows
+    # Normalise filter_type
+    if filter_type not in ("all", "book", "article", "website"):
+        filter_type = "all"
 
-    # Style selection
+    # Apply filter in Python
+    if filter_type != "all":
+        filtered_rows = [r for r in rows if (r["entry_type"] or "book") == filter_type]
+    else:
+        filtered_rows = list(rows)
+
+    # Pick citation style (fallback to APA if unknown)
     try:
         chosen_style = CitationStyle(style)
     except ValueError:
@@ -458,10 +463,20 @@ async def show_bibliography(
         style = "apa"
 
     entries = []
-    for row in rows:
-        # Extract basic fields
-        entry_type = row["entry_type"] if "entry_type" in row.keys() else "book"
-        authors_list = [a.strip() for a in (row["authors"] or "").split(";") if a.strip()]
+
+    for row in filtered_rows:
+        entry_type = (row["entry_type"] or "book").lower()
+        authors_list = [
+            a.strip()
+            for a in (row["authors"] or "").split(";")
+            if a.strip()
+        ]
+
+        # Safely pull website-only columns (in case older DB doesn't have them yet)
+        row_keys = set(row.keys())
+        site_name: Optional[str] = row["site_name"] if "site_name" in row_keys else None
+        url: Optional[str] = row["url"] if "url" in row_keys else None
+        accessed: Optional[str] = row["accessed"] if "accessed" in row_keys else None
 
         if entry_type == "article":
             source = Article(
@@ -475,7 +490,20 @@ async def show_bibliography(
                 doi=row["doi"],
             )
             citation = format_article_citation(source, chosen_style)
+
+        elif entry_type == "website":
+            source = Website(
+                title=row["title"],
+                authors=authors_list,
+                year=row["year"],
+                site_name=site_name,
+                url=url or "",
+                accessed=accessed,
+            )
+            citation = format_website_citation(source, chosen_style)
+
         else:
+            # default / legacy: book
             source = Book(
                 title=row["title"],
                 authors=authors_list,
@@ -494,7 +522,7 @@ async def show_bibliography(
             }
         )
 
-    # Sort alphabetically by citation text
+    # Sort alphabetically by final citation text
     entries_sorted = sorted(entries, key=lambda e: e["citation"].lower())
 
     return templates.TemplateResponse(
@@ -503,7 +531,7 @@ async def show_bibliography(
             "request": request,
             "entries": entries_sorted,
             "current_style": style,
-            "current_filter": entry_filter,
+            "current_filter": filter_type,
             "current_user": current_user,
         },
     )
@@ -522,11 +550,14 @@ async def add_to_bibliography(
     issue: str = Form(None),
     pages: str = Form(None),
     doi: str = Form(None),
+    site_name: str = Form(None),
+    url: str = Form(None),
+    accessed: str = Form(None),
     style: str = Form(...),
     cover_url: str = Form(None),
 ):
     """
-    Add a book to the persistent bibliography (SQLite).
+    Add a source (book, article, or website) to the persistent bibliography (SQLite).
     """
     current_user = get_current_user(request)
     if not current_user:
@@ -548,6 +579,9 @@ async def add_to_bibliography(
             "issue": (issue or "").strip() or None,
             "pages": (pages or "").strip() or None,
             "doi": (doi or "").strip() or None,
+            "site_name": (site_name or "").strip() or None,
+            "url": (url or "").strip() or None,
+            "accessed": (accessed or "").strip() or None,
             "style": style,
             "cover_url": (cover_url or "").strip() or None,
         },
