@@ -1,14 +1,7 @@
 from typing import List
 import httpx
 
-from citation import Book
-
-OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
-
-from typing import List
-import httpx
-
-from citation import Book
+from book_citation import Book
 
 OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
 

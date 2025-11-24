@@ -5,8 +5,21 @@ from fastapi.templating import Jinja2Templates
 
 from starlette.middleware.sessions import SessionMiddleware
 
-from citation import format_citation, CitationStyle, Book, format_bibtex, format_citation_html
+from book_citation import (
+    format_citation,
+    CitationStyle,
+    Book,
+    format_bibtex,
+    format_citation_html,
+)
+from journal_citation import (
+    Article,
+    format_article_citation,
+    format_article_citation_html,
+    format_article_bibtex,
+)
 from services import search_books
+from journal_services import search_articles
 import db
 from typing import List, Dict, Any, Optional
 
@@ -165,22 +178,50 @@ async def index(request: Request):
             "request": request,
             "error": None,
             "selected_style": "apa",
+            "selected_source_type": "book",
             "current_user": current_user,
         },
     )
 
 @app.post("/search", response_class=HTMLResponse)
-async def search(request: Request, query: str = Form(...), style: str = Form(...)):
+async def search(
+    request: Request,
+    query: str = Form(...),
+    style: str = Form(...),
+    source_type: str = Form("book"),  # "book" or "article"
+):
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
-    books, had_error = await search_books(query)
+    if source_type == "article":
+        results, had_error = await search_articles(query)
+    else:
+        # default to book
+        books, had_error = await search_books(query)
+        # adapt book results to unified format
+        results = []
+        for b in books:
+            results.append(
+                {
+                    "entry_type": "book",
+                    "title": b.title,
+                    "authors": b.authors or [],
+                    "year": b.year,
+                    "publisher": b.publisher or "",
+                    "place": b.place or "",
+                    "journal": "",
+                    "volume": "",
+                    "issue": "",
+                    "pages": "",
+                    "doi": "",
+                    "cover_url": b.cover_url or "",
+                }
+            )
 
     if had_error:
-        # API / server problem
         error_message = (
-            "We couldn't reach the book database (Open Library) just now. "
+            "We couldn't reach the external database just now. "
             "This is a temporary problem on their side. Please try again in a few minutes."
         )
         return templates.TemplateResponse(
@@ -190,15 +231,15 @@ async def search(request: Request, query: str = Form(...), style: str = Form(...
                 "results": None,
                 "error": error_message,
                 "selected_style": style,
+                "selected_source_type": source_type,
                 "current_user": current_user,
             },
         )
 
-    if not books:
-        # No error, but no matches
+    if not results:
         error_message = (
-            f"No books found for '{query}'. Please check the spelling or try "
-            "a different search (e.g. author name or ISBN)."
+            f"No results found for '{query}'. Please check the spelling or try "
+            "a different search (e.g. author name or DOI/ISBN)."
         )
         return templates.TemplateResponse(
             "index.html",
@@ -207,18 +248,19 @@ async def search(request: Request, query: str = Form(...), style: str = Form(...
                 "results": None,
                 "error": error_message,
                 "selected_style": style,
+                "selected_source_type": source_type,
                 "current_user": current_user,
             },
         )
 
-    # All good: show results
     return templates.TemplateResponse(
         "results.html",
         {
             "request": request,
-            "results": books,
+            "results": results,
             "style": style,
             "query": query,
+            "selected_source_type": source_type,
             "current_user": current_user,
         },
     )
@@ -226,11 +268,17 @@ async def search(request: Request, query: str = Form(...), style: str = Form(...
 @app.post("/confirm", response_class=HTMLResponse)
 async def confirm(
     request: Request,
+    entry_type: str = Form(...),  # "book" or "article"
     title: str = Form(...),
     authors: str = Form(...),
     year: str = Form(None),
     publisher: str = Form(None),
     place: str = Form(None),
+    journal: str = Form(None),
+    volume: str = Form(None),
+    issue: str = Form(None),
+    pages: str = Form(None),
+    doi: str = Form(None),
     style: str = Form(...),
     cover_url: str = Form(None),
 ):
@@ -246,11 +294,17 @@ async def confirm(
         "confirm.html",
         {
             "request": request,
+            "entry_type": entry_type,
             "title": title,
             "authors": authors,
             "year": year or "",
             "publisher": publisher or "",
             "place": place or "",
+            "journal": journal or "",
+            "volume": volume or "",
+            "issue": issue or "",
+            "pages": pages or "",
+            "doi": doi or "",
             "style": style,
             "cover_url": cover_url or "",
             "current_user": current_user,
@@ -259,19 +313,27 @@ async def confirm(
 
 
 @app.get("/manual", response_class=HTMLResponse)
-async def manual_entry(request: Request):
+async def manual_entry(
+    request: Request,
+    source_type: str = "book",   # "book" or "article"
+):
     """
-    Show a blank form for manually entering book details (no Open Library).
+    Show a form for manually entering a source (book or journal article).
     """
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
+
+    # Ensure only supported types
+    if source_type not in ("book", "article"):
+        source_type = "book"
 
     return templates.TemplateResponse(
         "manual.html",
         {
             "request": request,
             "selected_style": "apa",
+            "source_type": source_type,
             "current_user": current_user,
         },
     )
@@ -279,59 +341,116 @@ async def manual_entry(request: Request):
 @app.post("/cite", response_class=HTMLResponse)
 async def cite(
     request: Request,
+    entry_type: str = Form(...),   # "book" or "article"
     title: str = Form(...),
     authors: str = Form(...),
     year: str = Form(None),
     publisher: str = Form(None),
     place: str = Form(None),
+    journal: str = Form(None),
+    volume: str = Form(None),
+    issue: str = Form(None),
+    pages: str = Form(None),
+    doi: str = Form(None),
     style: str = Form(...),
     cover_url: str = Form(None),
 ):
     """
-    Generate a formatted citation for the selected book.
+    Generate a formatted citation for the selected source (book or article).
     """
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
-    authors_list = [a.strip() for a in authors.split(";") if a.strip()]
-    book = Book(
-        title=title,
-        authors=authors_list,
-        year=year or None,
-        publisher=publisher or None,
-        place=place or None,
-        cover_url=cover_url or None,
-    )
+    # Normalize / validate entry_type
+    entry_type = (entry_type or "book").lower()
+    if entry_type not in ("book", "article"):
+        entry_type = "book"
 
-    citation = format_citation(book, CitationStyle(style))
-    citation_html = format_citation_html(book, CitationStyle(style))
-    bibtex = format_bibtex(book)
+    authors_list = [a.strip() for a in authors.split(";") if a.strip()]
+
+    # Style safety
+    try:
+        chosen_style = CitationStyle(style)
+    except ValueError:
+        chosen_style = CitationStyle.apa
+        style = "apa"
+
+    # --- Build source + format citation ---
+    if entry_type == "article":
+        source = Article(
+            title=title,
+            authors=authors_list,
+            year=year or None,
+            journal=journal or None,
+            volume=volume or None,
+            issue=issue or None,
+            pages=pages or None,
+            doi=doi or None,
+        )
+        citation = format_article_citation(source, chosen_style)
+        citation_html = format_article_citation_html(source, chosen_style)
+        bibtex = format_article_bibtex(source)
+    else:
+        # book
+        source = Book(
+            title=title,
+            authors=authors_list,
+            year=year or None,
+            publisher=publisher or None,
+            place=place or None,
+            cover_url=cover_url or None,
+        )
+        citation = format_citation(source, chosen_style)
+        citation_html = format_citation_html(source, chosen_style)
+        bibtex = format_bibtex(source)
 
     return templates.TemplateResponse(
         "citation.html",
         {
             "request": request,
-            "citation": citation,           # plain text (for textarea/copy)
-            "citation_html": citation_html, # HTML with <em> for titles
-            "bibtex": bibtex,               # BibTeX block
+            "entry_type": entry_type,     # for buttons / labels
+            "source_type": entry_type,    # for details card logic
+            "citation": citation,
+            "citation_html": citation_html,
+            "bibtex": bibtex,
             "style": style,
-            "book": book,
+            "source": source,             # Book or Article
+            "cover_url": cover_url or "",
             "current_user": current_user,
         },
     )
+
 
 @app.get("/bibliography", response_class=HTMLResponse)
 async def show_bibliography(
     request: Request,
     style: str = Query("apa"),
+    entry_filter: str = Query("all", alias="filter"),  # "all", "book", or "article"
 ):
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
+    # Normalise filter
+    if entry_filter not in ("all", "book", "article"):
+        entry_filter = "all"
+
     rows = db.get_all_entries(current_user.id)
 
+    # Optional filtering on entry_type
+    if entry_filter != "all":
+        filtered_rows = []
+        for row in rows:
+            # Treat missing entry_type as "book" for backwards compatibility
+            row_type = row.get("entry_type") if isinstance(row, dict) else row["entry_type"]
+            if not row_type:
+                row_type = "book"
+            if row_type == entry_filter:
+                filtered_rows.append(row)
+        rows = filtered_rows
+
+    # Style selection
     try:
         chosen_style = CitationStyle(style)
     except ValueError:
@@ -340,18 +459,42 @@ async def show_bibliography(
 
     entries = []
     for row in rows:
+        # Extract basic fields
+        entry_type = row["entry_type"] if "entry_type" in row.keys() else "book"
         authors_list = [a.strip() for a in (row["authors"] or "").split(";") if a.strip()]
-        book = Book(
-            title=row["title"],
-            authors=authors_list,
-            year=row["year"],
-            publisher=row["publisher"],
-            place=row["place"],
-            cover_url=row["cover_url"],
-        )
-        citation = format_citation(book, chosen_style)
-        entries.append({"id": row["id"], "citation": citation})
 
+        if entry_type == "article":
+            source = Article(
+                title=row["title"],
+                authors=authors_list,
+                year=row["year"],
+                journal=row["journal"],
+                volume=row["volume"],
+                issue=row["issue"],
+                pages=row["pages"],
+                doi=row["doi"],
+            )
+            citation = format_article_citation(source, chosen_style)
+        else:
+            source = Book(
+                title=row["title"],
+                authors=authors_list,
+                year=row["year"],
+                publisher=row["publisher"],
+                place=row["place"],
+                cover_url=row["cover_url"],
+            )
+            citation = format_citation(source, chosen_style)
+
+        entries.append(
+            {
+                "id": row["id"],
+                "entry_type": entry_type,
+                "citation": citation,
+            }
+        )
+
+    # Sort alphabetically by citation text
     entries_sorted = sorted(entries, key=lambda e: e["citation"].lower())
 
     return templates.TemplateResponse(
@@ -360,19 +503,25 @@ async def show_bibliography(
             "request": request,
             "entries": entries_sorted,
             "current_style": style,
+            "current_filter": entry_filter,
             "current_user": current_user,
         },
     )
 
-
 @app.post("/bibliography/add", response_class=HTMLResponse)
 async def add_to_bibliography(
     request: Request,
+    entry_type: str = Form(...),
     title: str = Form(...),
     authors: str = Form(...),
     year: str = Form(None),
     publisher: str = Form(None),
     place: str = Form(None),
+    journal: str = Form(None),
+    volume: str = Form(None),
+    issue: str = Form(None),
+    pages: str = Form(None),
+    doi: str = Form(None),
     style: str = Form(...),
     cover_url: str = Form(None),
 ):
@@ -388,11 +537,17 @@ async def add_to_bibliography(
     db.add_entry(
         current_user.id,
         {
+            "entry_type": entry_type,
             "title": title.strip(),
             "authors": authors_str,
             "year": (year or "").strip() or None,
             "publisher": (publisher or "").strip() or None,
             "place": (place or "").strip() or None,
+            "journal": (journal or "").strip() or None,
+            "volume": (volume or "").strip() or None,
+            "issue": (issue or "").strip() or None,
+            "pages": (pages or "").strip() or None,
+            "doi": (doi or "").strip() or None,
             "style": style,
             "cover_url": (cover_url or "").strip() or None,
         },

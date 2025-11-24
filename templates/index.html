@@ -9,9 +9,17 @@
     <div class="alert">{{ error }}</div>
   {% endif %}
 
-  <form id="search-form" action="/search" method="post" class="card">
-  <label for="query">Book title, author, or ISBN</label>
-  <input type="text" id="query" name="query" placeholder="e.g. Thinking, Fast and Slow" required>
+<form id="search-form" action="/search" method="post" class="card">
+  <label for="query">Book or article title, author, or ISBN/DOI</label>
+  <input type="text" id="query" name="query"
+         placeholder="e.g. Thinking, Fast and Slow or 'Cognitive reflection and decision making'"
+         required>
+
+  <label for="source_type">Source type</label>
+  <select id="source_type" name="source_type">
+    <option value="book" {% if selected_source_type == "book" %}selected{% endif %}>Book</option>
+    <option value="article" {% if selected_source_type == "article" %}selected{% endif %}>Journal article</option>
+  </select>
 
   <label for="style">Citation style</label>
   <select id="style" name="style">
@@ -23,7 +31,7 @@
   </select>
 
   <button id="search-btn" type="submit">Search</button>
-  </form>
+</form>
 
   <p class="note">FolioCite is an early prototype. Always double-check your final references against your institution's guidelines.</p>
 </div>

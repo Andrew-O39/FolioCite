@@ -3,7 +3,7 @@
 <div class="container">
   <h1>My Bibliography</h1>
   <p class="subtitle">
-    Citations you have added in this session, sorted alphabetically in the selected style.
+    Citations you have added to your account, sorted alphabetically in the selected style.
     You can copy the list below and paste it directly into your project.
   </p>
 
@@ -15,7 +15,7 @@
     <a href="/" class="back-link">&larr; Go to search</a>
   {% else %}
 
-    <!-- Style selector -->
+    <!-- Style + filter selector -->
     <div class="card" style="margin-bottom: 1rem;">
       <form action="/bibliography" method="get" class="inline-form">
         <label for="style">Display style:</label>
@@ -26,13 +26,23 @@
           <option value="harvard" {% if current_style == "harvard" %}selected{% endif %}>Harvard</option>
           <option value="vancouver" {% if current_style == "vancouver" %}selected{% endif %}>Vancouver</option>
         </select>
-        <button type="submit">Apply</button>
+
+        <label for="filter" style="margin-left: 1rem;">Filter:</label>
+        <select id="filter" name="filter">
+          <option value="all" {% if current_filter == "all" %}selected{% endif %}>All</option>
+          <option value="book" {% if current_filter == "book" %}selected{% endif %}>Books only</option>
+          <option value="article" {% if current_filter == "article" %}selected{% endif %}>Articles only</option>
+        </select>
+
+        <button type="submit" style="margin-left: 1rem;">Apply</button>
       </form>
     </div>
 
     <!-- Combined textarea for copy-all -->
     <div class="card">
-      <label for="biblio-text">Your bibliography (plain text, {{ current_style|capitalize }})</label>
+      <label for="biblio-text">
+        Your bibliography (plain text, {{ current_style|capitalize }}, {{ current_filter }})
+      </label>
       <textarea id="biblio-text" readonly rows="10">
 {% for entry in entries %}{{ entry.citation }}{% if not loop.last %}
 {% endif %}{% endfor %}</textarea>
@@ -60,6 +70,11 @@
       <ol>
         {% for entry in entries %}
           <li style="margin-bottom: 0.5rem;">
+            {% if entry.entry_type == "article" %}
+              <span>[Article] </span>
+            {% else %}
+              <span>[Book] </span>
+            {% endif %}
             <span>{{ entry.citation }}</span>
             <form action="/bibliography/delete" method="post" style="display:inline; margin-left: 0.5rem;">
               <input type="hidden" name="entry_id" value="{{ entry.id }}">
@@ -70,11 +85,12 @@
       </ol>
     </div>
 
-    <a href="/" class="back-link">&larr; Add more books</a>
+    <a href="/" class="back-link">&larr; Add more sources</a>
   {% endif %}
 </div>
 
 <script>
+  // Copy entire bibliography textarea
   const biblioBtn = document.getElementById('copy-biblio-btn');
   const biblioTextarea = document.getElementById('biblio-text');
   const biblioStatus = document.getElementById('copy-biblio-status');
@@ -89,5 +105,31 @@
       }
     });
   }
+
+  // Confirm "Clear My Bibliography"
+  const clearForms = document.querySelectorAll('form[action="/bibliography/clear"]');
+  clearForms.forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      const ok = confirm(
+        "Are you sure you want to clear your entire bibliography?\nThis cannot be undone."
+      );
+      if (!ok) {
+        event.preventDefault();
+      }
+    });
+  });
+
+  // Confirm deleting individual entries
+  const deleteForms = document.querySelectorAll('form[action="/bibliography/delete"]');
+  deleteForms.forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      const ok = confirm(
+        "Delete this entry from your bibliography?\nThis cannot be undone."
+      );
+      if (!ok) {
+        event.preventDefault();
+      }
+    });
+  });
 </script>
 {% endblock %}

@@ -50,8 +50,8 @@ main {
 }
 
 .logo {
-  height: 36px;
-  width: 36px;
+  height: 48px;
+  width: 48px;
   border-radius: 0.75rem;
   flex-shrink: 0;
 }
@@ -96,7 +96,15 @@ main {
   color: #ffffff;
   transform: translateY(-1px);
 }
+.nav-links a.nav-link-active {
+  background-color: rgba(59, 130, 246, 0.25); /* blue pill highlight */
+  color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.6);
+}
 
+.nav-links a.nav-link-active:hover {
+  background-color: rgba(59, 130, 246, 0.35);
+}
 /* Logout as link-style button */
 
 .link-button {

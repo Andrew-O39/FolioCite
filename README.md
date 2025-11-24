@@ -31,6 +31,7 @@ FolioCiteApp/
 ├── main.py              # FastAPI app & routes
 ├── citation.py          # Book model & citation formatting logic
 ├── services.py          # Open Library API integration
+├── db.py                # Database
 │
 ├── templates/           # Jinja2 HTML templates
 │   ├── base.html
@@ -41,9 +42,16 @@ FolioCiteApp/
 ├── static/
 │   ├── styles.css       # Basic styling
 │   └── logo.svg         # Simple FolioCite logo
+├── docs/
+│   └── user_guide.md
 │
 ├── requirements.txt     # Python dependencies
-└── README.md            # This file
+├── run_foliocite_window.bat     # Script for running on Windows
+├── env.local 
+├── .env     # Environment file
+└── README.md
+         
+
 ```
 
 ---

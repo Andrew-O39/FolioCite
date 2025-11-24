@@ -38,11 +38,17 @@ def init_db():
         CREATE TABLE IF NOT EXISTS bibliography (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
+            entry_type TEXT NOT NULL, -- "book" or "article"
             title TEXT NOT NULL,
             authors TEXT NOT NULL,    -- semicolon-separated
             year TEXT,
             publisher TEXT,
             place TEXT,
+            journal TEXT,
+            volume TEXT,
+            issue TEXT,
+            pages TEXT,
+            doi TEXT,
             style TEXT NOT NULL,
             cover_url TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -103,22 +109,34 @@ def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
 
 def add_entry(user_id: int, data: Dict[str, Any]) -> int:
     """
-    data keys: title, authors (semicolon string), year, publisher, place, style, cover_url
+    data keys: entry_type, title, authors (semicolon string),
+               year, publisher, place, journal, volume, issue, pages, doi,
+               style, cover_url
     """
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
         """
-        INSERT INTO bibliography (user_id, title, authors, year, publisher, place, style, cover_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO bibliography (
+            user_id, entry_type, title, authors, year,
+            publisher, place, journal, volume, issue, pages, doi,
+            style, cover_url
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             user_id,
+            data["entry_type"],
             data["title"],
             data["authors"],
             data.get("year"),
             data.get("publisher"),
             data.get("place"),
+            data.get("journal"),
+            data.get("volume"),
+            data.get("issue"),
+            data.get("pages"),
+            data.get("doi"),
             data["style"],
             data.get("cover_url"),
         ),

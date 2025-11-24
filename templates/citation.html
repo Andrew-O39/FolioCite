@@ -1,91 +1,159 @@
-
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
   <h1>Your citation</h1>
 
-<div class="card">
-  <label for="citation">Formatted reference</label>
-  <textarea id="citation" readonly rows="4">{{ citation }}</textarea>
-  <button id="copy-btn" type="button">Copy to clipboard</button>
-  <p id="copy-status" class="copy-status"></p>
-</div>
+  <!-- Plain text citation -->
+  <div class="card">
+    <label for="citation">Formatted reference</label>
+    <textarea id="citation" readonly rows="4">{{ citation }}</textarea>
+    <button id="copy-btn" type="button">Copy to clipboard</button>
+    <p id="copy-status" class="copy-status"></p>
+  </div>
 
-<div class="card">
-  <label>
-  Formatted reference
-  {% if style == "vancouver" %}
-    (no italics)
-  {% else %}
-    (with italics)
-  {% endif %}
-  </label>
+  <!-- HTML-formatted citation -->
+  <div class="card">
+    <label>
+      Formatted reference
+      {% if style == "vancouver" %}
+        (no italics)
+      {% else %}
+        (with italics)
+      {% endif %}
+    </label>
 
-  <p class="citation-pretty" id="citation-html">{{ citation_html|safe }}</p>
-  <button id="copy-html-btn" type="button">Copy formatted version</button>
-  <p id="copy-html-status" class="copy-status"></p>
-</div>
+    <p class="citation-pretty" id="citation-html">{{ citation_html|safe }}</p>
+    <button id="copy-html-btn" type="button">Copy formatted version</button>
+    <p id="copy-html-status" class="copy-status"></p>
+  </div>
 
-<div class="card">
-  <form action="/bibliography/add" method="post" class="inline-form">
-    <input type="hidden" name="title" value="{{ book.title }}">
-    <input type="hidden" name="authors" value="{{ ';'.join(book.authors) }}">
-    <input type="hidden" name="year" value="{{ book.year or '' }}">
-    <input type="hidden" name="publisher" value="{{ book.publisher or '' }}">
-    <input type="hidden" name="place" value="{{ book.place or '' }}">
-    <input type="hidden" name="style" value="{{ style }}">
-    <input type="hidden" name="cover_url" value="{{ book.cover_url or '' }}">
+  <!-- Add to bibliography -->
+  <div class="card">
+    <form action="/bibliography/add" method="post" class="inline-form">
+      <!-- What kind of source is this? "book" or "article" -->
+      <input type="hidden" name="entry_type" value="{{ entry_type }}">
 
-    <button type="submit">Add to My Bibliography</button>
-    <a href="/bibliography" class="back-link" style="margin-left: 0.75rem;">
-      View My Bibliography
-    </a>
-  </form>
-</div>
+      <!-- Common fields -->
+      <input type="hidden" name="title" value="{{ source.title }}">
+      <input type="hidden" name="authors"
+             value="{{ ';'.join(source.authors or []) }}">
+      <input type="hidden" name="year" value="{{ source.year or '' }}">
+      <input type="hidden" name="style" value="{{ style }}">
 
-<div class="card">
-  <label for="bibtex">BibTeX entry</label>
-  <textarea id="bibtex" readonly rows="6">{{ bibtex }}</textarea>
-  <button id="copy-bibtex-btn" type="button">Copy BibTeX</button>
-  <p id="copy-bibtex-status" class="copy-status"></p>
-</div>
+      {% if entry_type == "book" %}
+        <!-- Book-specific fields -->
+        <input type="hidden" name="publisher" value="{{ source.publisher or '' }}">
+        <input type="hidden" name="place" value="{{ source.place or '' }}">
 
+        <!-- Article fields empty for books -->
+        <input type="hidden" name="journal" value="">
+        <input type="hidden" name="volume" value="">
+        <input type="hidden" name="issue" value="">
+        <input type="hidden" name="pages" value="">
+        <input type="hidden" name="doi" value="">
+
+        <!-- Cover only for books -->
+        <input type="hidden" name="cover_url" value="{{ source.cover_url or '' }}">
+
+      {% else %}
+        <!-- Article-specific fields -->
+        <input type="hidden" name="journal" value="{{ source.journal or '' }}">
+        <input type="hidden" name="volume" value="{{ source.volume or '' }}">
+        <input type="hidden" name="issue" value="{{ source.issue or '' }}">
+        <input type="hidden" name="pages" value="{{ source.pages or '' }}">
+        <input type="hidden" name="doi" value="{{ source.doi or '' }}">
+
+        <!-- Book fields empty for articles -->
+        <input type="hidden" name="publisher" value="">
+        <input type="hidden" name="place" value="">
+        <input type="hidden" name="cover_url" value="">
+      {% endif %}
+
+      <button type="submit">Add to My Bibliography</button>
+      <a href="/bibliography" class="back-link" style="margin-left: 0.75rem;">
+        View My Bibliography
+      </a>
+    </form>
+  </div>
+
+  <!-- BibTeX block -->
+  <div class="card">
+    <label for="bibtex">BibTeX entry</label>
+    <textarea id="bibtex" readonly rows="6">{{ bibtex }}</textarea>
+    <button id="copy-bibtex-btn" type="button">Copy BibTeX</button>
+    <p id="copy-bibtex-status" class="copy-status"></p>
+  </div>
+
+  <!-- Source details card -->
   <div class="card info-card">
-  <h2>Source details</h2>
-  {% if book.cover_url %}
-    <div style="max-width: 180px; margin-bottom: 1rem;">
-      <img src="{{ book.cover_url }}" alt="Book cover for {{ book.title }}" style="width: 100%; border-radius: 8px;">
-    </div>
-  {% endif %}
-  <p><strong>Title:</strong> {{ book.title }}</p>
-  {% if book.authors %}
-    <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
-  {% endif %}
-  {% if book.publisher %}
-    <p><strong>Publisher:</strong> {{ book.publisher }}</p>
-  {% endif %}
-  {% if book.place %}
-    <p><strong>Place:</strong> {{ book.place }}</p>
-  {% endif %}
-  {% if book.year %}
-    <p><strong>Year:</strong> {{ book.year }}</p>
-  {% endif %}
-  <p><strong>Style:</strong>
-    {% if style == "apa" %}
-      APA (7th)
-    {% elif style == "mla" %}
-      MLA (9th)
-    {% elif style == "chicago" %}
-      Chicago (author-date)
-    {% elif style == "harvard" %}
-      Harvard
-    {% elif style == "vancouver" %}
-      Vancouver
-    {% else %}
-      {{ style }}
+    <h2>
+      {% if entry_type == "article" %}
+        Article details
+      {% else %}
+        Book details
+      {% endif %}
+    </h2>
+
+    {# Cover image for books only #}
+    {% if entry_type == "book" and source.cover_url %}
+      <div style="max-width: 180px; margin-bottom: 1rem;">
+        <img src="{{ source.cover_url }}" alt="Cover image for {{ source.title }}"
+             style="width: 100%; border-radius: 8px;">
+      </div>
     {% endif %}
-  </p>
-</div>
+
+    <p><strong>Title:</strong> {{ source.title }}</p>
+
+    {% if source.authors %}
+      <p><strong>Authors:</strong> {{ ", ".join(source.authors) }}</p>
+    {% endif %}
+
+    {# Book-specific #}
+    {% if entry_type == "book" %}
+      {% if source.publisher %}
+        <p><strong>Publisher:</strong> {{ source.publisher }}</p>
+      {% endif %}
+      {% if source.place %}
+        <p><strong>Place:</strong> {{ source.place }}</p>
+      {% endif %}
+      {% if source.year %}
+        <p><strong>Year:</strong> {{ source.year }}</p>
+      {% endif %}
+    {% endif %}
+
+    {# Article-specific #}
+    {% if entry_type == "article" %}
+      {% if source.journal %}
+        <p><strong>Journal:</strong> {{ source.journal }}</p>
+      {% endif %}
+      {% if source.volume %}
+        <p><strong>Volume:</strong> {{ source.volume }}</p>
+      {% endif %}
+      {% if source.issue %}
+        <p><strong>Issue:</strong> {{ source.issue }}</p>
+      {% endif %}
+      {% if source.pages %}
+        <p><strong>Pages:</strong> {{ source.pages }}</p>
+      {% endif %}
+      {% if source.year %}
+        <p><strong>Year:</strong> {{ source.year }}</p>
+      {% endif %}
+      {% if source.doi %}
+        <p><strong>DOI:</strong> {{ source.doi }}</p>
+      {% endif %}
+    {% endif %}
+
+    <p><strong>Style:</strong>
+      {% if style == "apa" %} APA (7th)
+      {% elif style == "mla" %} MLA (9th)
+      {% elif style == "chicago" %} Chicago (author-date)
+      {% elif style == "harvard" %} Harvard
+      {% elif style == "vancouver" %} Vancouver
+      {% else %} {{ style }}
+      {% endif %}
+    </p>
+  </div>
+
   <a href="/" class="btn" style="
     display: inline-block;
     padding: 0.6rem 1.2rem;
@@ -94,9 +162,10 @@
     border-radius: 6px;
     text-decoration: none;
     margin-bottom: 1rem;
-">
-  New search
-</a>
+  ">
+    New search
+  </a>
+</div>
 
 <script>
   // Copy plain-text citation
@@ -136,7 +205,7 @@
   const htmlCitation = document.getElementById('citation-html');
   const htmlStatus = document.getElementById('copy-html-status');
 
-  if (htmlBtn && htmlCitation && navigator.clipboard) {
+  if (htmlBtn && htmlCitation && navigator.clipboard && window.ClipboardItem) {
     htmlBtn.addEventListener('click', async () => {
       try {
         await navigator.clipboard.write([
@@ -145,7 +214,6 @@
             "text/plain": new Blob([htmlCitation.innerText], { type: "text/plain" })
           })
         ]);
-
         htmlStatus.textContent = "Formatted version copied!";
       } catch (err) {
         htmlStatus.textContent = "Could not copy automatically. Please select and copy manually.";

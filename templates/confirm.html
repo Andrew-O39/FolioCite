@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-  <h1>Confirm book details</h1>
+  <h1>Confirm {{ 'book' if entry_type == 'book' else 'article' }} details</h1>
   <p class="subtitle">
     Check and edit the metadata below if needed. FolioCite will use this
     information to build your citation.
   </p>
 
   <p class="note">
-    These details were fetched automatically from Open Library and may be
+    These details were fetched automatically from an external database and may be
     incomplete or slightly inaccurate (especially publisher, place, and year).
     Please adjust them before you use the citation in your thesis.
   </p>
@@ -17,9 +17,11 @@
 
     {% if cover_url %}
       <div style="max-width: 220px; margin-bottom: 1rem;">
-        <img src="{{ cover_url }}" alt="Book cover for {{ title }}" style="width: 100%; border-radius: 8px;">
+        <img src="{{ cover_url }}" alt="Cover for {{ title }}" style="width: 100%; border-radius: 8px;">
       </div>
     {% endif %}
+
+    <input type="hidden" name="entry_type" value="{{ entry_type }}">
 
     <label for="title">Title</label>
     <input
@@ -30,13 +32,12 @@
       required
     >
 
-    <label for="authors">Authors (separate multiple authors with a semicolon “;”)</label>
+    <label for="authors">Authors (separate with semicolon “;”)</label>
     <input
       type="text"
       id="authors"
       name="authors"
       value="{{ authors }}"
-      placeholder="e.g. Daniel Kahneman; Amos Tversky"
     >
 
     <label for="year">Year</label>
@@ -48,26 +49,72 @@
       placeholder="e.g. 2011"
     >
 
-    <label for="publisher">Publisher</label>
-    <input
-      type="text"
-      id="publisher"
-      name="publisher"
-      value="{{ publisher }}"
-      placeholder="e.g. Farrar, Straus and Giroux"
-    >
+    {% if entry_type == "book" %}
+      <label for="publisher">Publisher</label>
+      <input
+        type="text"
+        id="publisher"
+        name="publisher"
+        value="{{ publisher }}"
+        placeholder="e.g. Farrar, Straus and Giroux"
+      >
 
-    <label for="place">Place of publication</label>
-    <input
-      type="text"
-      id="place"
-      name="place"
-      value="{{ place }}"
-      placeholder="e.g. London"
-    >
+      <label for="place">Place of publication</label>
+      <input
+        type="text"
+        id="place"
+        name="place"
+        value="{{ place }}"
+        placeholder="e.g. London"
+      >
+    {% else %}
+      <label for="journal">Journal</label>
+      <input
+        type="text"
+        id="journal"
+        name="journal"
+        value="{{ journal }}"
+        placeholder="e.g. Journal of XYZ"
+      >
 
+      <label for="volume">Volume</label>
+      <input
+        type="text"
+        id="volume"
+        name="volume"
+        value="{{ volume }}"
+      >
+
+      <label for="issue">Issue</label>
+      <input
+        type="text"
+        id="issue"
+        name="issue"
+        value="{{ issue }}"
+      >
+
+      <label for="pages">Pages</label>
+      <input
+        type="text"
+        id="pages"
+        name="pages"
+        value="{{ pages }}"
+        placeholder="e.g. 123–145"
+      >
+
+      <label for="doi">DOI</label>
+      <input
+        type="text"
+        id="doi"
+        name="doi"
+        value="{{ doi }}"
+        placeholder="e.g. 10.1000/xyz123"
+      >
+    {% endif %}
+
+    {# These must be outside the if/else so both books and articles send them #}
     <input type="hidden" name="style" value="{{ style }}">
-    <input type="hidden" name="cover_url" value="{{ cover_url }}">
+    <input type="hidden" name="cover_url" value="{{ cover_url or '' }}">
 
     <button type="submit">Generate citation</button>
   </form>

@@ -2,41 +2,58 @@
 {% block content %}
 <div class="container">
   <h1>Search results</h1>
-  <p class="subtitle">Showing matches for "<strong>{{ query }}</strong>"</p>
+  <p class="subtitle">Select the correct source and confirm its details.</p>
 
   <div class="results">
-    {% for book in results %}
+    {% for item in results %}
       <div class="card result-card">
         <div class="result-layout">
-          {% if book.cover_url %}
+          {% if item.cover_url %}
             <div class="result-cover">
-              <img src="{{ book.cover_url }}" alt="Book cover for {{ book.title }}">
+              <img src="{{ item.cover_url }}" alt="Cover for {{ item.title }}">
             </div>
           {% endif %}
           <div class="result-main">
-            <h2>{{ book.title }}</h2>
-            {% if book.authors %}
-              <p><strong>Authors:</strong> {{ ", ".join(book.authors) }}</p>
+            <h2>{{ item.title }}</h2>
+            {% if item.authors %}
+              <p><strong>Authors:</strong> {{ item.authors | join(", ") }}</p>
             {% endif %}
-            {% if book.publisher %}
-              <p><strong>Publisher:</strong> {{ book.publisher }}</p>
-            {% endif %}
-            {% if book.place %}
-              <p><strong>Place:</strong> {{ book.place }}</p>
-            {% endif %}
-            {% if book.year %}
-              <p><strong>Year:</strong> {{ book.year }}</p>
+            {% if item.entry_type == "book" %}
+              {% if item.publisher %}
+                <p><strong>Publisher:</strong> {{ item.publisher }}</p>
+              {% endif %}
+              {% if item.place %}
+                <p><strong>Place:</strong> {{ item.place }}</p>
+              {% endif %}
+            {% else %}
+              {% if item.journal %}
+                <p><strong>Journal:</strong> {{ item.journal }}</p>
+              {% endif %}
+              <p>
+                {% if item.volume %}<strong>Volume:</strong> {{ item.volume }} {% endif %}
+                {% if item.issue %} <strong>Issue:</strong> {{ item.issue }} {% endif %}
+                {% if item.pages %} <strong>Pages:</strong> {{ item.pages }} {% endif %}
+              </p>
+              {% if item.doi %}
+                <p><strong>DOI:</strong> {{ item.doi }}</p>
+              {% endif %}
             {% endif %}
 
             <form action="/confirm" method="post" class="inline-form">
-              <input type="hidden" name="title" value="{{ book.title }}">
-              <input type="hidden" name="authors" value="{{ ';'.join(book.authors) }}">
-              <input type="hidden" name="publisher" value="{{ book.publisher or '' }}">
-              <input type="hidden" name="place" value="{{ book.place or '' }}">
-              <input type="hidden" name="year" value="{{ book.year or '' }}">
+              <input type="hidden" name="entry_type" value="{{ item.entry_type }}">
+              <input type="hidden" name="title" value="{{ item.title }}">
+              <input type="hidden" name="authors" value="{{ item.authors | join('; ') }}">
+              <input type="hidden" name="year" value="{{ item.year or '' }}">
+              <input type="hidden" name="publisher" value="{{ item.publisher or '' }}">
+              <input type="hidden" name="place" value="{{ item.place or '' }}">
+              <input type="hidden" name="journal" value="{{ item.journal or '' }}">
+              <input type="hidden" name="volume" value="{{ item.volume or '' }}">
+              <input type="hidden" name="issue" value="{{ item.issue or '' }}">
+              <input type="hidden" name="pages" value="{{ item.pages or '' }}">
+              <input type="hidden" name="doi" value="{{ item.doi or '' }}">
               <input type="hidden" name="style" value="{{ style }}">
-              <input type="hidden" name="cover_url" value="{{ book.cover_url or '' }}">
-              <button type="submit">Use this book</button>
+              <input type="hidden" name="cover_url" value="{{ item.cover_url or '' }}">
+              <button type="submit">Select this {{ 'book' if item.entry_type == 'book' else 'article' }}</button>
             </form>
           </div>
         </div>
@@ -44,6 +61,6 @@
     {% endfor %}
   </div>
 
-  <a href="/" class="back-link">&larr; Start a new search</a>
+  <a href="/" class="back-link">&larr; Start over</a>
 </div>
 {% endblock %}

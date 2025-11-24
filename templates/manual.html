@@ -1,28 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-  <h1>Manual book entry</h1>
+  <h1>Manual source entry</h1>
   <p class="subtitle">
-    Enter the book details yourself. FolioCite will generate a citation from the fields below.
+    Enter the details of a book or journal article manually. FolioCite will
+    format the citation for you.
   </p>
 
   <div class="card">
     <form action="/cite" method="post">
+      <!-- Source type selector -->
+      <label for="entry_type">Source type</label>
+      <select id="entry_type" name="entry_type">
+        <option value="book" {% if source_type == "book" %}selected{% endif %}>Book</option>
+        <option value="article" {% if source_type == "article" %}selected{% endif %}>Journal article</option>
+      </select>
+
+      <!-- Common fields -->
       <label for="title">Title</label>
       <input
         type="text"
         id="title"
         name="title"
-        placeholder="A life in the political history of Ghana: Memoirs of Alhaji Mumuni Bawumia"
+        placeholder="e.g. Thinking, Fast and Slow"
         required
       >
 
-      <label for="authors">Authors (separate multiple authors with a semicolon “;”)</label>
+      <label for="authors">Authors (separate with semicolon “;”)</label>
       <input
         type="text"
         id="authors"
         name="authors"
-        placeholder="e.g. Mumuni Bawumia"
+        placeholder="e.g. Daniel Kahneman; Amos Tversky"
       >
 
       <label for="year">Year</label>
@@ -30,25 +39,72 @@
         type="text"
         id="year"
         name="year"
-        placeholder="e.g. 2004"
+        placeholder="e.g. 2011"
       >
 
-      <label for="publisher">Publisher</label>
-      <input
-        type="text"
-        id="publisher"
-        name="publisher"
-        placeholder="e.g. Ghana University Press"
-      >
+      <!-- Book-specific fields -->
+      <div id="book-fields">
+        <label for="publisher">Publisher</label>
+        <input
+          type="text"
+          id="publisher"
+          name="publisher"
+          placeholder="e.g. Farrar, Straus and Giroux"
+        >
 
-      <label for="place">Place of publication</label>
-      <input
-        type="text"
-        id="place"
-        name="place"
-        placeholder="e.g. Accra"
-      >
+        <label for="place">Place of publication</label>
+        <input
+          type="text"
+          id="place"
+          name="place"
+          placeholder="e.g. London"
+        >
+      </div>
 
+      <!-- Article-specific fields -->
+      <div id="article-fields" style="display:none;">
+        <label for="journal">Journal name</label>
+        <input
+          type="text"
+          id="journal"
+          name="journal"
+          placeholder="e.g. Journal of Economic Perspectives"
+        >
+
+        <label for="volume">Volume</label>
+        <input
+          type="text"
+          id="volume"
+          name="volume"
+          placeholder="e.g. 32"
+        >
+
+        <label for="issue">Issue</label>
+        <input
+          type="text"
+          id="issue"
+          name="issue"
+          placeholder="e.g. 4"
+        >
+
+        <label for="pages">Pages</label>
+        <input
+          type="text"
+          id="pages"
+          name="pages"
+          placeholder="e.g. 123–145"
+        >
+
+        <label for="doi">DOI</label>
+        <input
+          type="text"
+          id="doi"
+          name="doi"
+          placeholder="e.g. 10.1016/j.jfineco.2019.01.003"
+        >
+      </div>
+
+      <!-- Citation style -->
       <label for="style">Citation style</label>
       <select id="style" name="style">
         <option value="apa" {% if selected_style == "apa" %}selected{% endif %}>APA (7th)</option>
@@ -58,6 +114,7 @@
         <option value="vancouver" {% if selected_style == "vancouver" %}selected{% endif %}>Vancouver</option>
       </select>
 
+      <!-- No cover for manual entry -->
       <input type="hidden" name="cover_url" value="">
 
       <button type="submit">Generate citation</button>
@@ -66,4 +123,29 @@
 
   <a href="/" class="back-link">&larr; Back to search</a>
 </div>
+
+<script>
+  (function() {
+    const typeSelect = document.getElementById('entry_type');
+    const bookFields = document.getElementById('book-fields');
+    const articleFields = document.getElementById('article-fields');
+
+    function updateFields() {
+      const value = typeSelect.value;
+      if (value === 'article') {
+        bookFields.style.display = 'none';
+        articleFields.style.display = 'block';
+      } else {
+        bookFields.style.display = 'block';
+        articleFields.style.display = 'none';
+      }
+    }
+
+    if (typeSelect && bookFields && articleFields) {
+      typeSelect.addEventListener('change', updateFields);
+      // Initialize on page load based on current value
+      updateFields();
+    }
+  })();
+</script>
 {% endblock %}
