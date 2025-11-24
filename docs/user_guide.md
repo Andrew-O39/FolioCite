@@ -7,14 +7,17 @@
 
 FolioCite is a simple tool that helps you:
 
-- Search for a book  
+- Search for a book (via Open Library)
+- Search for a **journal article** (via Crossref)
 - Confirm or edit its details  
 - Generate a citation in multiple styles  
 - Save citations to your personal bibliography  
 - Export your bibliography as **.txt** or **.bib**  
 - Manually enter a book if it cannot be found online  
+- Delete items or clear your bibliography entirely
 
-FolioCite is designed to make academic writing easier and reduce the stress of formatting references.
+FolioCite is designed to make referencing quick and stress-free.
+
 
 ---
 
@@ -22,21 +25,21 @@ FolioCite is designed to make academic writing easier and reduce the stress of f
 
 ### 1️⃣ Open the app
 
-After running the program, a browser window will open automatically:http://127.0.0.1:8000
+After running the program, open your browser and visit:http://127.0.0.1:8000
 
-This is the main page.
+This is the main search page.
 
 ---
 
 ## 👤 Creating an Account
 
-1. Click **Register** in the top navigation bar.  
+1. Click **Register** in the top navigation bar.
 2. Enter:
    - Username  
    - Email  
    - Password  
    - Confirm password  
-3. After registration, you will be taken to the login page.  
+3. After registration, you will be redirected to the login page.
 4. Log in using your **username + password**.
 
 Once logged in, the navigation bar will show:
@@ -48,43 +51,68 @@ Once logged in, the navigation bar will show:
 
 ---
 
-## 🔍 Searching for a Book
+## 🔍 Searching for a Source
 
-1. Go to **Search** from the navigation bar.  
-2. Enter a **book title**, **author**, or **ISBN**.  
-3. Select the desired citation style:
+On the homepage:
+
+1. Enter your search query  
+   - For **books**: title, author, or ISBN  
+   - For **articles**: title, author, or DOI  
+2. Choose what you are searching for:
+   - **Book**
+   - **Journal article**
+3. Choose your citation style:
    - APA (7th)
    - MLA (9th)
    - Chicago
    - Harvard
-   - Vancouver  
+   - Vancouver
 4. Click **Search**.
 
-You will see up to 5 matching books, each with:
+Search results will show:
 
+### For Books:
 - Title  
 - Authors  
+- Publisher (if available)  
 - Year  
-- Book cover (if available)  
-- “Select this book” button
+- Book cover  
+
+### For Articles:
+- Title  
+- Authors  
+- Journal  
+- Volume/issue  
+- Pages  
+- DOI  
+
+Click **Select this item** to continue.
 
 ---
 
-## ✏️ Confirming Book Details
+## ✏️ Confirming Source Details  
+After selecting a result, you'll see a **confirmation page**.
 
-After selecting a book, you will be taken to a **confirmation page**.
+This page lets you edit metadata before generating the citation.
 
-Here you can edit:
-
+### For Books:
 - Title  
 - Authors  
 - Year  
 - Publisher  
-- Place of publication  
+- Place  
 
-Review the details and correct anything that looks wrong.
+### For Articles:
+- Title  
+- Authors  
+- Journal  
+- Year  
+- Volume  
+- Issue  
+- Pages  
+- DOI  
 
-When ready, click:
+Fix anything that looks incorrect, then click:
 
 ### **Generate citation**
 
@@ -92,35 +120,40 @@ When ready, click:
 
 ## 📄 Viewing Your Citation
 
-The citation page shows:
+The citation page provides:
 
-### ✔ Plain text citation  
-Copy-friendly, for direct pasting into your document.
+### ✔ Plain-text citation  
+Ready to paste into Word, Google Docs, etc.
 
 ### ✔ Formatted citation  
-Includes italics and styling (useful for visual clarity).
+With italics and styling (HTML-based).
 
 ### ✔ BibTeX entry  
 For LaTeX users.
 
-Each section has a **Copy** button.
+All 3 areas include **Copy** buttons.
 
-You’ll also see the book cover and metadata for reference.
+You’ll also see metadata and (for books) the cover image.
 
 ---
 
 ## 📚 Saving to My Bibliography
 
-On the citation page, you may see:
+Click **Add to My Bibliography** to save the source.
 
-### **Add to My Bibliography**
+To view your saved items:
 
-Clicking it saves the citation under your account.
+1. Click **My Bibliography** in the navigation bar.
 
-To view your saved citations:
+Your bibliography includes:
 
-1. Click **My Bibliography** in the navigation bar.  
-2. Your saved citations will appear in alphabetical order.
+- All your saved citations  
+- Sorted alphabetically  
+- Switchable **style display** (APA/MLA/Chic./Harvard/Vancouver)  
+- Filters:
+  - **All**
+  - **Books only**
+  - **Articles only**
 
 ---
 
@@ -128,37 +161,39 @@ To view your saved citations:
 
 On the **My Bibliography** page, you can:
 
-### ✔ Delete specific citations  
-Each item has a small delete button.
+### ✔ Delete one entry  
+Each item has a delete button (with confirmation).
 
-### ✔ Clear all citations  
-Use the **Clear Bibliography** button.
+### ✔ Clear the entire bibliography  
+A **Clear My Bibliography** button removes everything (with confirmation).
 
 ### ✔ Export your bibliography  
-You can download your citations as:
+You can download:
 
-- `.txt` — plain text list  
-- `.bib` — BibTeX file  
-
-These files can be pasted directly into papers or LaTeX projects.
+- **.txt** — plain text list  
+- **.bib** — BibTeX for LaTeX  
 
 ---
 
-## ✍️ Manual Book Entry
+## ✍️ Manual Entry (Books & Articles)
 
-If a book cannot be found online:
+If search doesn’t find your source:
 
-1. Click **Manual Entry** in the navigation bar.  
-2. A blank form will appear.  
-3. Enter the book details manually.  
-4. Generate the citation just like with search results.
+1. Click **Manual entry**.
+2. Choose:
+   - **Book**
+   - **Journal article**
+3. Fill in the fields manually.
+4. Select your citation style.
+5. Click **Generate citation**.
 
-This is helpful for:
+Use manual entry for:
 
-- Rare/out-of-print books  
-- Older editions  
-- Local publications  
-- Books missing from Open Library  
+- Rare books  
+- Old publications  
+- Conference papers  
+- Articles missing from databases  
+- Local or unpublished material  
 
 ---
 
@@ -166,31 +201,34 @@ This is helpful for:
 
 Click **Logout (your username)** in the navigation bar.
 
-This logs you out and clears your session.
-
 ---
 
 ## 🆘 Troubleshooting
 
-### **“No books found”**
+### **No results found**
 Try:
-- A different spelling  
-- Author name  
-- ISBN
+- A simpler query  
+- Author name only  
+- ISBN (for books)  
+- DOI (for articles)
 
-### **“Open Library temporarily unavailable”**
-The book service may be down.  
-Try again after a few minutes.
+### **API temporarily unavailable**
+This occurs if Open Library or Crossref is offline.  
+Try again in a few minutes.
 
-### **Incorrect book data**
-Some metadata comes from external sources and may be incomplete.  
-Always review the **confirmation page** and fix any errors before generating your citation.
+### **Incorrect metadata**
+Always double-check the **confirmation page**  
+— you can edit anything before generating the citation.
+
+### **Cannot copy citation**
+If browser clipboard permissions fail, just select the text manually.
 
 ---
 
-## 🎉 That’s It!
+## 🎉 You’re ready to use FolioCite!
 
-FolioCite is built to be simple and helpful.  
-If you find any issues or have suggestions, please share your feedback.
+FolioCite makes referencing easy whether you're writing an essay, report, thesis, or research paper.
+
+If you have suggestions or issues, feel free to provide feedback.
 
 Happy writing! ✨
