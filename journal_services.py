@@ -5,7 +5,7 @@ import httpx
 CROSSREF_BASE_URL = "https://api.crossref.org/works"
 
 
-async def search_articles(query: str) -> Tuple[List[Dict], bool]:
+async def search_articles(query: str, limit: int = 10) -> Tuple[List[Dict], bool]:
     """
     Search Crossref for journal articles matching the query.
     Returns (results, had_error).
@@ -15,7 +15,7 @@ async def search_articles(query: str) -> Tuple[List[Dict], bool]:
     params = {
         "query": query,
         "filter": "type:journal-article",
-        "rows": 5,
+        "rows": limit,
     }
 
     try:

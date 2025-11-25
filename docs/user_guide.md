@@ -1,19 +1,26 @@
 # 📘 FolioCite – User Guide
-*A simple guide for using the FolioCite book citation generator.*
+*A simple guide for using the FolioCite citation generator.*
 
 ---
 
 ## 🗂️ What is FolioCite?
 
-FolioCite is a simple tool that helps you:
+FolioCite is a lightweight, user-friendly tool for generating academic citations.
 
+It now supports:
+- Books
+- Journal articles
+- Websites:
+
+You can:
 - Search for a book (via Open Library)
 - Search for a **journal article** (via Crossref)
-- Confirm or edit its details  
-- Generate a citation in multiple styles  
-- Save citations to your personal bibliography  
+- Manually generate citations for books, articles, and websites 
+- Generate citations in APA, MLA, Chicago, Harvard, or Vancouver
+- Save citations to your personal bibliography 
+- Filter by Books / Articles / Websites / All
 - Export your bibliography as **.txt** or **.bib**  
-- Manually enter a book if it cannot be found online  
+- Copy plain text, formatted HTML, or BibTeX
 - Delete items or clear your bibliography entirely
 
 FolioCite is designed to make referencing quick and stress-free.
@@ -27,7 +34,7 @@ FolioCite is designed to make referencing quick and stress-free.
 
 After running the program, open your browser and visit:http://127.0.0.1:8000
 
-This is the main search page.
+You will arrive on the main Search page.
 
 ---
 
@@ -147,13 +154,15 @@ To view your saved items:
 
 Your bibliography includes:
 
-- All your saved citations  
+- All your saved citations including those you added manually 
+- - NB: Read about manual entries bellow. 
 - Sorted alphabetically  
 - Switchable **style display** (APA/MLA/Chic./Harvard/Vancouver)  
 - Filters:
   - **All**
   - **Books only**
   - **Articles only**
+  - **Website only**
 
 ---
 
@@ -195,6 +204,30 @@ Use manual entry for:
 - Articles missing from databases  
 - Local or unpublished material  
 
+Any source can be added manually:
+- Books with missing metadata
+- Journal articles (with DOI or without)
+- Websites requiring access dates
+
+This ensures you can cite anything, even without search.
+
+## 🌐 Manual Entry (Website)
+
+Websites aren’t searchable, so they must be added via Manual entry.
+1. Click Manual entry 
+2. Choose Website from the “Source type” dropdown
+3. Fill in:
+- - Page title
+- - Authors (if known)
+- - Website / site name
+- - URL
+- - Year (optional)
+- - Access date (optional but recommended)
+4. Choose a citation style
+5. Click Generate citation
+
+You’ll then see the formatted citation and can save it to your bibliography.
+
 ---
 
 ## 🚪 Logging Out
@@ -223,6 +256,11 @@ Always double-check the **confirmation page**
 ### **Cannot copy citation**
 If browser clipboard permissions fail, just select the text manually.
 
+### **Website citation missing access date**
+
+Some styles require an access date (e.g., MLA, Harvard for websites).\
+Add it manually.
+
 ---
 
 ## 🎉 You’re ready to use FolioCite!
@@ -231,4 +269,4 @@ FolioCite makes referencing easy whether you're writing an essay, report, thesis
 
 If you have suggestions or issues, feel free to provide feedback.
 
-Happy writing! ✨
+Happy writing! Happy citing!✨

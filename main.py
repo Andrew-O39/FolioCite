@@ -195,16 +195,22 @@ async def search(
     query: str = Form(...),
     style: str = Form(...),
     source_type: str = Form("book"),  # "book" or "article"
+    page: int = Form(1),
 ):
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
+    # Clamp page
+    if page < 1:
+        page = 1
+
+    # ---- Fetch from the appropriate API ----
     if source_type == "article":
-        results, had_error = await search_articles(query)
+        results, had_error = await search_articles(query, limit=10)
     else:
         # default to book
-        books, had_error = await search_books(query)
+        books, had_error = await search_books(query, limit=10)
         # adapt book results to unified format
         results = []
         for b in books:
@@ -212,7 +218,7 @@ async def search(
                 {
                     "entry_type": "book",
                     "title": b.title,
-                    "authors": b.authors or [],
+                    "authors": b.authors,
                     "year": b.year,
                     "publisher": b.publisher or "",
                     "place": b.place or "",
@@ -225,6 +231,7 @@ async def search(
                 }
             )
 
+    # ---- Error handling ----
     if had_error:
         error_message = (
             "We couldn't reach the external database just now. "
@@ -259,14 +266,35 @@ async def search(
             },
         )
 
+    # ---- Pagination (5 items per page) ----
+    page_size = 5
+    total_results = len(results)
+    total_pages = (total_results + page_size - 1) // page_size
+
+    # Clamp page again in case the user manually edited it
+    if page > total_pages:
+        page = total_pages
+
+    start = (page - 1) * page_size
+    end = start + page_size
+    page_results = results[start:end]
+
+    has_prev = page > 1
+    has_next = page < total_pages
+
+    # Render results page
     return templates.TemplateResponse(
         "results.html",
         {
             "request": request,
-            "results": results,
+            "results": page_results,  # only the 5 items for this page
             "style": style,
             "query": query,
-            "selected_source_type": source_type,
+            "source_type": source_type,
+            "current_page": page,
+            "total_pages": total_pages,
+            "has_prev": has_prev,
+            "has_next": has_next,
             "current_user": current_user,
         },
     )

@@ -1,14 +1,9 @@
 # 📚 FolioCite
 
-**FolioCite** is a clean, citation generator built with **FastAPI** — now supporting **books _and_ journal articles**.
+**FolioCite** is a clean, multi-source citation generator built with **FastAPI** 
 
-It lets you search for sources (via **Open Library** for books and **Crossref** for articles), manually enter metadata, and generate formatted citations in:
-
-- **APA (7th)**
-- **MLA (9th)**
-- **Chicago (Author–Date)**
-- **Harvard**
-- **Vancouver**
+It supports **books, journal articles _and_ websites**,
+generating citations in all major styles through a simple and elegant web interface.
 
 It also supports **user accounts**, **saved bibliographies**, **BibTeX export**, **copy-all**, and more.
 
@@ -16,12 +11,15 @@ It also supports **user accounts**, **saved bibliographies**, **BibTeX export**,
 
 ## 🚀 Features
 
-### 🔍 Source Search
-- **Books** (Open Library API)
-- **Journal Articles** (Crossref API)
-- Unified search UX
+### 🔍 Source Search & Import
+- Search for **Books** via the **Open Library API**
+- Search for **Journal Articles** via **Crossref API**
+- Unified search UX for Books and Journals
 - Search by title, author, ISBN, DOI, or keywords
-- Manual entry mode for books & journals
+- Manual entry mode for 
+- - books, 
+- - journals & 
+- - websites 
 
 ### ✍️ Citation Generation
 - Styles supported:
@@ -30,7 +28,16 @@ It also supports **user accounts**, **saved bibliographies**, **BibTeX export**,
   - Chicago (author–date)
   - Harvard
   - Vancouver
-- Plain text, rich HTML (with italics), and **BibTeX** output
+
+### 📄 Output Formats
+- Plain text citation
+- Rich HTML-styled citation (with italics / formatting), 
+- **BibTeX export**
+- **Bibliography export** as:
+    - .txt
+	- .bib
+
+- 
 
 ### 📘 Manual Entry
 - Books
@@ -59,6 +66,8 @@ It also supports **user accounts**, **saved bibliographies**, **BibTeX export**,
 - Responsive layout
 - Dark header + modern aesthetic
 - Clear forms and structured results
+- Responsive and simple design powered by Jinja2 templates
+- One-click “Copy to clipboard”
 
 ---
 
@@ -70,6 +79,7 @@ FolioCiteApp/
 ├── main.py                     # FastAPI app & routes
 ├── book_citation.py            # Book model & formatting logic
 ├── journal_citation.py         # Article model & formatting logic
+├── website_citation.py         # Website model & citation logic
 ├── services.py                 # External API integrations
 ├── db.py                       # SQLite user + bibliography storage
 │
@@ -90,7 +100,6 @@ FolioCiteApp/
 │   └── user_guide.md
 │
 ├── requirements.txt
-├── env.local
 ├── .env
 └── README.md
 
@@ -142,27 +151,35 @@ http://127.0.0.1:8000/
 
 You will see the FolioCite home page. Enter a book or article title, author, or ISBN,
 choose a style, and follow the steps to get your formatted citation.
+If you don't want to search for books or articles, you could as well visit the manual entry page 
+and enter book/article/or website post details and generate citation for the said book, article or website.
 
 ---
 
 ## ✨ Notes & limitations
 
-- Metadata quality depends on **Open Library** and **Crossref(articles)**. Some sources may have missing or incomplete fields
-  (years, publishers, pages or author lists)
-- Citation formatting is intentionally **simplified** though accurate for standard academic use.
-  Always double-check for strict institutional requirements.
+- Metadata quality for books comes from **Open Library** 
+- Metadata for journal articles comes from **Crossref(articles)** which may have varying author formatting. 
+- Some sources may have missing or incomplete fields
+  (years, publishers, pages or author lists) from the APIs, so it is important to verify entries before using them.
+- Citation formatting is intentionally **simplified** but covers all required major style rules and are accurate for standard academic use.
+  Nevertheless, always double-check for strict institutional requirements.
 - This is a starter project and a great base to extend with more features.
 
 ---
 
 ## 🌱 Ideas for future improvements
 
-- Website citations
-- Journal articles
-- Book chapter citations
-- Thesis & dissertation formats
-- RIS export
-- Browser extension
+- Website search via structured metadata (if reliable sources become available)
+- Support for
+- - Book chapter citations
+- - Thesis & dissertation formats
+- - Conference papers
+- - Report and grey literature
+- Export Options:
+- - RIS export
+- - EndNote XML
+- Browser extension or auto-capturing of website citation metadata
 - Email export / Share bibliography
 - Multi-language UI (EN, DE, FR…)
 - Collaborative bibliographies
@@ -176,7 +193,7 @@ choose a style, and follow the steps to get your formatted citation.
 - **Folio** – pages, books, and manuscripts
 - **Cite** – the act of referencing sources
 
-It reflects the app’s focus on helping students and researchers quickly turn
-books and articles into clean citations.
+It reflects the app’s focus and mission: helping students, researchers and
+writers generate clean, accurate citations with ease.
 
 Enjoy experimenting and extending FolioCite!

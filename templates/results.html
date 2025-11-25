@@ -2,7 +2,12 @@
 {% block content %}
 <div class="container">
   <h1>Search results</h1>
-  <p class="subtitle">Select the correct source and confirm its details.</p>
+  <p class="subtitle">
+    Select the correct source and confirm its details.
+    {% if total_pages and total_pages > 1 %}
+      (Page {{ current_page }} of {{ total_pages }})
+    {% endif %}
+  </p>
 
   <div class="results">
     {% for item in results %}
@@ -60,6 +65,36 @@
       </div>
     {% endfor %}
   </div>
+
+  {# --- Pagination controls --- #}
+  {% if total_pages and total_pages > 1 %}
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        Page {{ current_page }} of {{ total_pages }}
+      </div>
+      <div>
+        {% if has_prev %}
+          <form action="/search" method="post" style="display:inline;">
+            <input type="hidden" name="query" value="{{ query }}">
+            <input type="hidden" name="style" value="{{ style }}">
+            <input type="hidden" name="source_type" value="{{ source_type }}">
+            <input type="hidden" name="page" value="{{ current_page - 1 }}">
+            <button type="submit">&larr; Previous</button>
+          </form>
+        {% endif %}
+
+        {% if has_next %}
+          <form action="/search" method="post" style="display:inline; margin-left:0.5rem;">
+            <input type="hidden" name="query" value="{{ query }}">
+            <input type="hidden" name="style" value="{{ style }}">
+            <input type="hidden" name="source_type" value="{{ source_type }}">
+            <input type="hidden" name="page" value="{{ current_page + 1 }}">
+            <button type="submit">Next &rarr;</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 
   <a href="/" class="back-link">&larr; Start over</a>
 </div>

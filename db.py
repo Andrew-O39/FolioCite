@@ -19,7 +19,7 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
 
-    # Users table (unchanged)
+    # Users table
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -52,6 +52,7 @@ def init_db():
             site_name TEXT,
             url TEXT,
             accessed TEXT,
+            notes TEXT,
             style TEXT NOT NULL,
             cover_url TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

@@ -30,6 +30,9 @@
     <option value="vancouver" {% if selected_style == "vancouver" %}selected{% endif %}>Vancouver</option>
   </select>
 
+  <!-- Always start from page 1 for a fresh search -->
+  <input type="hidden" name="page" value="1">
+
   <button id="search-btn" type="submit">Search</button>
 </form>
 
