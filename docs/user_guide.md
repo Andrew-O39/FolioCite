@@ -5,16 +5,16 @@
 
 ## 🗂️ What is FolioCite?
 
-FolioCite is a lightweight, user-friendly tool for generating academic citations.
+FolioCite is a smart research tool that helps you **search, cite, organize, annotate, and export** academic sources.
 
-It now supports:
+It supports:
 - Books
 - Journal articles
 - Websites:
 
 You can:
-- Search for a book (via Open Library)
-- Search for a **journal article** (via Crossref)
+- Search for a book (via Open Library and Google Books)
+- Search for a **journal article** (via Crossref and Google Books)
 - Manually generate citations for books, articles, and websites 
 - Generate citations in APA, MLA, Chicago, Harvard, or Vancouver
 - Save citations to your personal bibliography 
@@ -177,11 +177,15 @@ Each item has a delete button (with confirmation).
 A **Clear My Bibliography** button removes everything (with confirmation).
 
 ### ✔ Export your bibliography  
-You can download:
+You can export your bibliography as:
 
-- **.txt** — plain text list  
-- **.bib** — BibTeX for LaTeX  
+| Format | Includes Notes? | Purpose |
+|--------|------------------|----------|
+| `.txt` | ❌ No | Clean academic submission |
+| `.bib` | ❌ No | LaTeX papers |
+| `.docx` | ❌ No | Word / Google Docs |
 
+📌 Notes are intentionally excluded from bulk exports.
 ---
 
 ## ✍️ Manual Entry (Books & Articles)

@@ -1,43 +1,53 @@
 # 📚 FolioCite
 
-**FolioCite** is a clean, multi-source citation generator built with **FastAPI** 
+**FolioCite** is a full-featured, multi-source citation manager built with **FastAPI**.  
 
-It supports **books, journal articles _and_ websites**,
-generating citations in all major styles through a simple and elegant web interface.
+It allows users to generate citations for **books, journal articles, and websites**, organize them into a personal bibliography, add research notes, and export to multiple formats. 
 
-It also supports **user accounts**, **saved bibliographies**, **BibTeX export**, **copy-all**, and more.
+Unlike simple citation generators, FolioCite acts as a **lightweight research management system**.
 
 ---
 
 ## 🚀 Features
 
 ### 🔍 Source Search & Import
-- Search for **Books** via the **Open Library API**
-- Search for **Journal Articles** via **Crossref API**
-- Unified search UX for Books and Journals
-- Search by title, author, ISBN, DOI, or keywords
-- Manual entry mode for 
-- - books, 
-- - journals & 
-- - websites 
+- Search for **books** using:
+  - Open Library API
+  - Google Books API (enhanced search)
+- Search for **journal articles**
+- **Manual entry** for:
+  - Books
+  - Journal articles
+  - Websites
 
 ### ✍️ Citation Generation
-- Styles supported:
+- Generates citations in:
   - APA (7th)
   - MLA (9th)
-  - Chicago (author–date)
+  - Chicago (Author–Date)
   - Harvard
   - Vancouver
 
+
 ### 📄 Output Formats
 - Plain text citation
-- Rich HTML-styled citation (with italics / formatting), 
-- **BibTeX export**
-- **Bibliography export** as:
-    - .txt
-	- .bib
+- Rich HTML-styled citation (with italics / formatting)
 
-- 
+### 📤 Export Options
+- Export bibliography as:
+  - `.txt` (plain text)
+  - `.bib` (BibTeX)
+  - `.docx` (Microsoft Word / Google Docs compatible)
+- Notes are **excluded** from bulk exports for clean academic formatting
+
+### 📝 Research Notes
+- Add **private notes** to every bibliography item
+- Notes are:
+  - Saved persistently
+  - Editable at any time
+- Copy:
+  - Citation only
+  - Citation + notes (per entry)
 
 ### 📘 Manual Entry
 - Books
@@ -46,11 +56,12 @@ It also supports **user accounts**, **saved bibliographies**, **BibTeX export**,
 
 ### 💾 My Bibliography
 - Save unlimited citations to your account (SQLite-backed)
-- Auto-sorted alphabetically
-- Filter by **Books / Articles / All**
-- Export:
-  - `.txt`
-  - `.bib`
+- - Filter by:
+  - All
+  - Books only
+  - Articles only
+  - Websites only
+- Auto-sort citation alphabetically
 - Delete individual entries
 - Clear entire bibliography
 - One-click action:
@@ -59,8 +70,9 @@ It also supports **user accounts**, **saved bibliographies**, **BibTeX export**,
   - `Copy BipTex`
 
 ### 👤 User Accounts
-- Register / Login / Logout
-- Each user has their own saved bibliography
+- Register & login system
+- Each user has a **secure private bibliography**
+- Logout confirmation for safety
 
 ### 🎨 Clean UI
 - Responsive layout
@@ -80,7 +92,8 @@ FolioCiteApp/
 ├── book_citation.py            # Book model & formatting logic
 ├── journal_citation.py         # Article model & formatting logic
 ├── website_citation.py         # Website model & citation logic
-├── services.py                 # External API integrations
+├── services.py                 # Book search (Open Library + Google Books)
+├── journal_services.py         # Journal article search (Open Library + Google Books)
 ├── db.py                       # SQLite user + bibliography storage
 │
 ├── templates/                  # Jinja2 HTML templates
@@ -100,6 +113,7 @@ FolioCiteApp/
 │   └── user_guide.md
 │
 ├── requirements.txt
+├── run_foliocite_window.bat
 ├── .env
 └── README.md
 
@@ -158,8 +172,8 @@ and enter book/article/or website post details and generate citation for the sai
 
 ## ✨ Notes & limitations
 
-- Metadata quality for books comes from **Open Library** 
-- Metadata for journal articles comes from **Crossref(articles)** which may have varying author formatting. 
+- Metadata quality for books comes from **Open Library** and **Google Books** 
+- Metadata for journal articles comes from **Crossref(articles)** and **Google Books** which may have varying author formatting. 
 - Some sources may have missing or incomplete fields
   (years, publishers, pages or author lists) from the APIs, so it is important to verify entries before using them.
 - Citation formatting is intentionally **simplified** but covers all required major style rules and are accurate for standard academic use.
