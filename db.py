@@ -19,7 +19,7 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
 
-    # Users table
+    # Users table (unchanged)
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -52,13 +52,17 @@ def init_db():
             site_name TEXT,
             url TEXT,
             accessed TEXT,
-            notes TEXT,
+            notes TEXT,               -- NEW: optional notes
             style TEXT NOT NULL,
             cover_url TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """
     )
+
+    conn.commit()
+    conn.close()
+
 
 # ---------- User helpers ----------
 
@@ -104,6 +108,7 @@ def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
     conn.close()
     return row
 
+
 # ---------- Bibliography helpers (per user) ----------
 
 def add_entry(user_id: int, data: Dict[str, Any]) -> int:
@@ -111,7 +116,7 @@ def add_entry(user_id: int, data: Dict[str, Any]) -> int:
     data keys: entry_type, title, authors (semicolon string),
                year, publisher, place,
                journal, volume, issue, pages, doi,
-               site_name, url, accessed,
+               site_name, url, accessed, notes,
                style, cover_url
     """
     conn = get_connection()
@@ -134,10 +139,11 @@ def add_entry(user_id: int, data: Dict[str, Any]) -> int:
             site_name,
             url,
             accessed,
+            notes,
             style,
             cover_url
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             user_id,
@@ -155,6 +161,7 @@ def add_entry(user_id: int, data: Dict[str, Any]) -> int:
             data.get("site_name"),
             data.get("url"),
             data.get("accessed"),
+            data.get("notes"),   # can be None
             data["style"],
             data.get("cover_url"),
         ),
@@ -163,6 +170,7 @@ def add_entry(user_id: int, data: Dict[str, Any]) -> int:
     entry_id = cur.lastrowid
     conn.close()
     return entry_id
+
 
 def get_all_entries(user_id: int, entry_type: Optional[str] = None) -> List[sqlite3.Row]:
     conn = get_connection()
@@ -182,6 +190,20 @@ def get_all_entries(user_id: int, entry_type: Optional[str] = None) -> List[sqli
     rows = cur.fetchall()
     conn.close()
     return rows
+
+
+def update_notes(user_id: int, entry_id: int, notes: Optional[str]) -> None:
+    """
+    Update the free-text notes field for a single bibliography entry.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE bibliography SET notes = ? WHERE id = ? AND user_id = ?",
+        (notes, entry_id, user_id),
+    )
+    conn.commit()
+    conn.close()
 
 
 def delete_entry(user_id: int, entry_id: int) -> None:

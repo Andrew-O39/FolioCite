@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Request, Form, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from io import BytesIO
+from docx import Document
 
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -547,6 +549,7 @@ async def show_bibliography(
                 "id": row["id"],
                 "entry_type": entry_type,
                 "citation": citation,
+                "notes": row["notes"],
             }
         )
 
@@ -610,6 +613,7 @@ async def add_to_bibliography(
             "site_name": (site_name or "").strip() or None,
             "url": (url or "").strip() or None,
             "accessed": (accessed or "").strip() or None,
+            "notes": None,  # initially empty; user can add later
             "style": style,
             "cover_url": (cover_url or "").strip() or None,
         },
@@ -628,6 +632,24 @@ async def clear_bibliography(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     db.clear_entries(current_user.id)
+    return RedirectResponse(url="/bibliography", status_code=303)
+
+@app.post("/bibliography/notes", response_class=HTMLResponse)
+async def update_bibliography_notes(
+    request: Request,
+    entry_id: int = Form(...),
+    notes: str = Form(""),
+):
+    """
+    Update the free-text notes field for a single bibliography entry.
+    """
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    clean_notes = notes.strip() or None
+    db.update_notes(current_user.id, entry_id, clean_notes)
+
     return RedirectResponse(url="/bibliography", status_code=303)
 
 
@@ -723,6 +745,124 @@ async def export_bibliography_bib(
         text,
         media_type="text/plain",
         headers={"Content-Disposition": f'attachment; filename=\"bibliography_{style}.bib\"'},
+    )
+
+from io import BytesIO
+from docx import Document
+from fastapi.responses import StreamingResponse
+
+@app.get("/bibliography/export.docx")
+async def export_bibliography_docx(
+    request: Request,
+    style: str = Query("apa"),
+    filter_type: str = Query("all"),  # "all" | "book" | "article" | "website"
+):
+    """
+    Export citations (only) as a .docx file that can be opened in Word / Google Docs.
+    Notes are intentionally NOT included for consistency with .txt/.bib exports.
+    """
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    # Load all rows for this user
+    rows = db.get_all_entries(current_user.id)
+
+    # Normalise filter_type
+    if filter_type not in ("all", "book", "article", "website"):
+        filter_type = "all"
+
+    # Apply filter
+    if filter_type != "all":
+        filtered_rows = [r for r in rows if (r["entry_type"] or "book") == filter_type]
+    else:
+        filtered_rows = list(rows)
+
+    # Pick citation style
+    try:
+        chosen_style = CitationStyle(style)
+    except ValueError:
+        chosen_style = CitationStyle.apa
+        style = "apa"
+
+    # Build list of citations (no notes)
+    citations: list[str] = []
+
+    for row in filtered_rows:
+        entry_type = (row["entry_type"] or "book").lower()
+        authors_list = [
+            a.strip()
+            for a in (row["authors"] or "").split(";")
+            if a.strip()
+        ]
+
+        row_keys = set(row.keys())
+        site_name = row["site_name"] if "site_name" in row_keys else None
+        url = row["url"] if "url" in row_keys else None
+        accessed = row["accessed"] if "accessed" in row_keys else None
+
+        if entry_type == "article":
+            source = Article(
+                title=row["title"],
+                authors=authors_list,
+                year=row["year"],
+                journal=row["journal"],
+                volume=row["volume"],
+                issue=row["issue"],
+                pages=row["pages"],
+                doi=row["doi"],
+            )
+            citation = format_article_citation(source, chosen_style)
+
+        elif entry_type == "website":
+            source = Website(
+                title=row["title"],
+                authors=authors_list,
+                year=row["year"],
+                site_name=site_name,
+                url=url or "",
+                accessed=accessed,
+            )
+            citation = format_website_citation(source, chosen_style)
+
+        else:
+            # default: book
+            source = Book(
+                title=row["title"],
+                authors=authors_list,
+                year=row["year"],
+                publisher=row["publisher"],
+                place=row["place"],
+                cover_url=row["cover_url"],
+            )
+            citation = format_citation(source, chosen_style)
+
+        citations.append(citation)
+
+    # Sort alphabetically
+    citations_sorted = sorted(citations, key=lambda c: c.lower())
+
+    # Build the .docx document (citations only)
+    doc = Document()
+    doc.add_heading(f"Bibliography ({style.upper()})", level=1)
+
+    for cit in citations_sorted:
+        p = doc.add_paragraph()
+        p.add_run(cit)
+
+    # Save to in-memory buffer
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+
+    filename = f"bibliography_{style}.docx"
+
+    return StreamingResponse(
+        buf,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ),
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 # For local debugging: `python main.py`

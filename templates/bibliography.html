@@ -17,29 +17,29 @@
 
     <!-- Style + filter selector -->
     <div class="card" style="margin-bottom: 1rem;">
-  <form action="/bibliography" method="get" class="inline-form">
-    <label for="filter_type">Show:</label>
-    <select id="filter_type" name="filter_type">
-      <option value="all" {% if current_filter == "all" %}selected{% endif %}>All</option>
-      <option value="book" {% if current_filter == "book" %}selected{% endif %}>Books only</option>
-      <option value="article" {% if current_filter == "article" %}selected{% endif %}>Articles only</option>
-      <option value="website" {% if current_filter == "website" %}selected{% endif %}>Websites only</option>
-    </select>
+      <form action="/bibliography" method="get" class="inline-form">
+        <label for="filter_type">Show:</label>
+        <select id="filter_type" name="filter_type">
+          <option value="all" {% if current_filter == "all" %}selected{% endif %}>All</option>
+          <option value="book" {% if current_filter == "book" %}selected{% endif %}>Books only</option>
+          <option value="article" {% if current_filter == "article" %}selected{% endif %}>Articles only</option>
+          <option value="website" {% if current_filter == "website" %}selected{% endif %}>Websites only</option>
+        </select>
 
-    <label for="style" style="margin-left: 0.75rem;">Style:</label>
-    <select id="style" name="style">
-      <option value="apa" {% if current_style == "apa" %}selected{% endif %}>APA</option>
-      <option value="mla" {% if current_style == "mla" %}selected{% endif %}>MLA</option>
-      <option value="chicago" {% if current_style == "chicago" %}selected{% endif %}>Chicago</option>
-      <option value="harvard" {% if current_style == "harvard" %}selected{% endif %}>Harvard</option>
-      <option value="vancouver" {% if current_style == "vancouver" %}selected{% endif %}>Vancouver</option>
-    </select>
+        <label for="style" style="margin-left: 0.75rem;">Style:</label>
+        <select id="style" name="style">
+          <option value="apa" {% if current_style == "apa" %}selected{% endif %}>APA</option>
+          <option value="mla" {% if current_style == "mla" %}selected{% endif %}>MLA</option>
+          <option value="chicago" {% if current_style == "chicago" %}selected{% endif %}>Chicago</option>
+          <option value="harvard" {% if current_style == "harvard" %}selected{% endif %}>Harvard</option>
+          <option value="vancouver" {% if current_style == "vancouver" %}selected{% endif %}>Vancouver</option>
+        </select>
 
-    <button type="submit" style="margin-left: 0.75rem;">Apply</button>
-  </form>
-</div>
+        <button type="submit" style="margin-left: 0.75rem;">Apply</button>
+      </form>
+    </div>
 
-    <!-- Combined textarea for copy-all -->
+    <!-- Combined textarea for copy-all (citations only, no notes) -->
     <div class="card">
       <label for="biblio-text">
         Your bibliography (plain text, {{ current_style|capitalize }}, {{ current_filter }})
@@ -55,45 +55,102 @@
     <div class="card">
       <form action="/bibliography/clear" method="post" style="display:inline;">
         <button type="submit">Clear My Bibliography</button>
-      </form>
+    </form>
 
-      <a href="/bibliography/export.txt?style={{ current_style }}" class="back-link" style="margin-left: 1rem;">
-        Export as .txt
-      </a>
-      <a href="/bibliography/export.bib?style={{ current_style }}" class="back-link" style="margin-left: 1rem;">
-        Export as .bib
-      </a>
-    </div>
+  <a href="/bibliography/export.txt?style={{ current_style }}" class="back-link" style="margin-left: 1rem;">
+    Export as .txt
+  </a>
+  <a href="/bibliography/export.bib?style={{ current_style }}" class="back-link" style="margin-left: 1rem;">
+    Export as .bib
+  </a>
+  <a
+    href="/bibliography/export.docx?style={{ current_style }}&filter_type={{ current_filter }}"
+    class="back-link"
+    style="margin-left: 1rem;"
+  >
+    Export as .docx (Word / Google Docs)
+  </a>
+  </div>
 
-    <!-- Individual entries with delete buttons -->
-    <div class="card">
-      <h2>Entries</h2>
-      <ol>
-        {% for entry in entries %}
-          <li style="margin-bottom: 0.5rem;">
-            {% if entry.entry_type == "article" %}
-              <span>[Article] </span>
-            {% elif entry.entry_type == "website" %}
-              <span>[Website] </span>
+    <!-- Individual entries with collapsible notes + delete buttons -->
+  <div class="card">
+  <h2>Entries</h2>
+  <ol>
+    {% for entry in entries %}
+      <li style="margin-bottom: 1rem;">
+        <div>
+          {% if entry.entry_type == "article" %}
+            <span>[Article] </span>
+          {% elif entry.entry_type == "website" %}
+            <span>[Website] </span>
+          {% else %}
+            <span>[Book] </span>
+          {% endif %}
+          <span>{{ entry.citation }}</span>
+        </div>
+
+        <!-- Collapsible Notes Section -->
+        <details style="margin-top: 0.4rem;">
+          <summary style="cursor: pointer; font-size: 0.85rem;">
+            {% if entry.notes %}
+              ✏️ View / Edit Notes
             {% else %}
-              <span>[Book] </span>
+              ➕ Add Notes
             {% endif %}
-              <span>{{ entry.citation }}</span>
-            <form action="/bibliography/delete" method="post" style="display:inline; margin-left: 0.5rem;">
-              <input type="hidden" name="entry_id" value="{{ entry.id }}">
-              <button type="submit" style="font-size: 0.8rem;">Delete</button>
-            </form>
-          </li>
-        {% endfor %}
-      </ol>
-    </div>
+          </summary>
+
+          <form
+            action="/bibliography/notes"
+            method="post"
+            class="inline-form"
+            style="margin-top: 0.5rem;"
+          >
+            <input type="hidden" name="entry_id" value="{{ entry.id }}">
+
+            <textarea
+              id="notes-{{ entry.id }}"
+              name="notes"
+              rows="3"
+              style="width:100%; margin-bottom:0.35rem;"
+            >{{ entry.notes or "" }}</textarea>
+
+            <button type="submit" style="font-size: 0.85rem;">
+              Save note
+            </button>
+
+            <button
+              type="button"
+              class="copy-note-btn"
+              data-citation="{{ entry.citation | e }}"
+              data-notes-id="notes-{{ entry.id }}"
+              style="font-size: 0.85rem; margin-left: 0.5rem;"
+            >
+              Copy citation + notes
+            </button>
+          </form>
+        </details>
+
+        <!-- Delete Button -->
+        <form
+          action="/bibliography/delete"
+          method="post"
+          style="display:inline; margin-top: 0.4rem;"
+        >
+          <input type="hidden" name="entry_id" value="{{ entry.id }}">
+          <button type="submit" style="font-size: 0.8rem;">Delete</button>
+        </form>
+
+      </li>
+    {% endfor %}
+  </ol>
+  </div>
 
     <a href="/" class="back-link">&larr; Add more sources</a>
   {% endif %}
 </div>
 
 <script>
-  // Copy entire bibliography textarea
+  // Copy entire bibliography textarea (citations only)
   const biblioBtn = document.getElementById('copy-biblio-btn');
   const biblioTextarea = document.getElementById('biblio-text');
   const biblioStatus = document.getElementById('copy-biblio-status');
@@ -131,6 +188,29 @@
       );
       if (!ok) {
         event.preventDefault();
+      }
+    });
+  });
+
+  // "Copy citation + notes" buttons
+  const copyNoteButtons = document.querySelectorAll('.copy-note-btn');
+  copyNoteButtons.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const citation = btn.getAttribute('data-citation') || '';
+      const notesId = btn.getAttribute('data-notes-id');
+      const notesEl = document.getElementById(notesId);
+      const notes = notesEl ? notesEl.value.trim() : '';
+
+      let textToCopy = citation;
+      if (notes) {
+        textToCopy += "\n\nNotes:\n" + notes;
+      }
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        alert("Citation and notes copied to clipboard.");
+      } catch (err) {
+        alert("Could not copy automatically. Please select and copy manually.");
       }
     });
   });

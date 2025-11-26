@@ -22,40 +22,45 @@
       </div>
 
       <nav class="nav-links">
-  {% set path = request.url.path %}
+        {% set path = request.url.path %}
 
-  <a href="/"
-     class="{% if path == '/' %}nav-link-active{% endif %}">
-    Search
-  </a>
+        <a href="/"
+           class="{% if path == '/' %}nav-link-active{% endif %}">
+          Search
+        </a>
 
-  <a href="/manual"
-     class="{% if path.startswith('/manual') %}nav-link-active{% endif %}">
-    Manual entry
-  </a>
+        <a href="/manual"
+           class="{% if path.startswith('/manual') %}nav-link-active{% endif %}">
+          Manual entry
+        </a>
 
-  {% if current_user %}
-    <a href="/bibliography"
-       class="{% if path.startswith('/bibliography') %}nav-link-active{% endif %}">
-      My Bibliography
-    </a>
+        {% if current_user %}
+          <a href="/bibliography"
+             class="{% if path.startswith('/bibliography') %}nav-link-active{% endif %}">
+            My Bibliography
+          </a>
 
-    <form action="/logout" method="post" style="display:inline;">
-      <button type="submit" class="link-button">
-        Logout ({{ current_user.username }})
-      </button>
-    </form>
-  {% else %}
-    <a href="/login"
-       class="{% if path.startswith('/login') %}nav-link-active{% endif %}">
-      Login
-    </a>
-    <a href="/register"
-       class="{% if path.startswith('/register') %}nav-link-active{% endif %}">
-      Register
-    </a>
-  {% endif %}
-</nav>
+          <form
+            action="/logout"
+            method="post"
+            style="display:inline;"
+            data-confirm="Are you sure you want to log out?"
+          >
+            <button type="submit" class="link-button">
+              Logout ({{ current_user.username }})
+            </button>
+          </form>
+        {% else %}
+          <a href="/login"
+             class="{% if path.startswith('/login') %}nav-link-active{% endif %}">
+            Login
+          </a>
+          <a href="/register"
+             class="{% if path.startswith('/register') %}nav-link-active{% endif %}">
+            Register
+          </a>
+        {% endif %}
+      </nav>
     </div>
   </header>
 
