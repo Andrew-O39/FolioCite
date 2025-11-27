@@ -2,8 +2,10 @@ from fastapi import FastAPI, Request, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from db import ensure_default_project, get_projects_for_user, create_project
 from io import BytesIO
 from docx import Document
+from typing import Optional
 
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -75,6 +77,20 @@ def get_current_user(request: Request) -> Optional[CurrentUser]:
         username=row["username"],
         email=row["email"],
     )
+
+def get_current_project_id(request: Request, user_id: int) -> int:
+    """
+    Read the active project_id from the session or create/select the default one.
+    """
+    project_id = request.session.get("project_id")
+    if project_id is not None:
+        return int(project_id)
+
+    # Ensure default project exists
+    default_project = ensure_default_project(user_id)
+    pid = default_project["id"]
+    request.session["project_id"] = pid
+    return pid
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_get(request: Request):
@@ -459,9 +475,6 @@ async def cite(
         },
     )
 
-from typing import Optional
-from fastapi import Query
-
 @app.get("/bibliography", response_class=HTMLResponse)
 async def show_bibliography(
     request: Request,
@@ -472,8 +485,19 @@ async def show_bibliography(
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
-    # Load all rows for this user from the DB
-    rows = db.get_all_entries(current_user.id)
+    # Which project is active?
+    project_id = get_current_project_id(request, current_user.id)
+    all_projects = get_projects_for_user(current_user.id)
+
+    # Figure out current project name (fallback if something is odd)
+    current_project_name = "Current project"
+    for p in all_projects:
+        if p["id"] == project_id:
+            current_project_name = p["name"]
+            break
+
+    # Load all rows for this user + project from the DB
+    rows = db.get_all_entries(current_user.id, project_id=project_id)
 
     # Normalise filter_type
     if filter_type not in ("all", "book", "article", "website"):
@@ -502,7 +526,7 @@ async def show_bibliography(
             if a.strip()
         ]
 
-        # Safely pull website-only columns (in case older DB doesn't have them yet)
+        # Safely pull website-only columns
         row_keys = set(row.keys())
         site_name: Optional[str] = row["site_name"] if "site_name" in row_keys else None
         url: Optional[str] = row["url"] if "url" in row_keys else None
@@ -564,6 +588,9 @@ async def show_bibliography(
             "current_style": style,
             "current_filter": filter_type,
             "current_user": current_user,
+            "projects": all_projects,
+            "current_project_id": project_id,
+            "current_project_name": current_project_name,
         },
     )
 
@@ -594,11 +621,14 @@ async def add_to_bibliography(
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
+    project_id = get_current_project_id(request, current_user.id)
+
     authors_str = ";".join([a.strip() for a in authors.split(";") if a.strip()])
 
     db.add_entry(
         current_user.id,
-        {
+        project_id,
+  {
             "entry_type": entry_type,
             "title": title.strip(),
             "authors": authors_str,
@@ -631,7 +661,9 @@ async def clear_bibliography(request: Request):
     if not current_user:
         return RedirectResponse(url="/login", status_code=303)
 
-    db.clear_entries(current_user.id)
+    project_id = get_current_project_id(request, current_user.id)
+
+    db.clear_entries(current_user.id, project_id=project_id)
     return RedirectResponse(url="/bibliography", status_code=303)
 
 @app.post("/bibliography/notes", response_class=HTMLResponse)
@@ -864,6 +896,44 @@ async def export_bibliography_docx(
         ),
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.post("/projects/select", response_class=HTMLResponse)
+async def select_project(
+    request: Request,
+    project_id: int = Form(...),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    # Make sure this project belongs to the user
+    projects = get_projects_for_user(current_user.id)
+    if any(p["id"] == project_id for p in projects):
+        request.session["project_id"] = int(project_id)
+
+    return RedirectResponse(url="/bibliography", status_code=303)
+
+
+@app.post("/projects/create", response_class=HTMLResponse)
+async def create_project_endpoint(
+    request: Request,
+    project_name: str = Form(...),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    name = project_name.strip()
+    if not name:
+        return RedirectResponse(url="/bibliography", status_code=303)
+
+    # Projects are not "default" – you keep one default per user
+    new_project_id = create_project(current_user.id, name, is_default=False)
+    request.session["project_id"] = new_project_id
+
+    return RedirectResponse(url="/bibliography", status_code=303)
+
 
 # For local debugging: `python main.py`
 if __name__ == "__main__":

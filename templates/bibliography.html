@@ -1,11 +1,63 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-  <h1>My Bibliography</h1>
+  <h1>
+  My Bibliography
+  {% if current_project_name %}
+    <span class="project-name-pill">– {{ current_project_name }}</span>
+  {% endif %}
+  </h1>
   <p class="subtitle">
     Citations you have added to your account, sorted alphabetically in the selected style.
     You can copy the list below and paste it directly into your project.
   </p>
+
+  <!-- Project selector + collapsible "New project" -->
+<div class="card" style="margin-bottom: 1rem;">
+  <!-- Switch project -->
+  <form action="/projects/select" method="post" class="inline-form">
+    <label for="project_id">Project:</label>
+    <select id="project_id" name="project_id">
+      {% for p in projects %}
+        <option value="{{ p.id }}"
+          {% if p.id == current_project_id %}selected{% endif %}>
+          {{ p.name }}{% if p.is_default %} (default){% endif %}
+        </option>
+      {% endfor %}
+    </select>
+    <button type="submit" style="margin-left: 0.75rem;">Switch</button>
+
+    <!-- Small "New project" toggle button -->
+    <button
+      type="button"
+      id="toggle-new-project"
+      style="margin-left: 0.75rem; font-size: 0.85rem;"
+    >
+      + New project
+    </button>
+  </form>
+
+  <!-- Collapsible new project form -->
+  <form
+    id="new-project-form"
+    action="/projects/create"
+    method="post"
+    class="inline-form"
+    style="margin-top: 0.75rem; display: none;"
+  >
+    <label for="project_name" style="margin-right: 0.5rem;">
+      New project name:
+    </label>
+    <input
+      type="text"
+      id="project_name"
+      name="project_name"
+      placeholder="e.g. Master’s thesis"
+      required
+    >
+    <button type="submit" style="margin-left: 0.5rem;">Create</button>
+  </form>
+</div>
 
   {% if not entries %}
     <p class="note">
@@ -149,7 +201,22 @@
   {% endif %}
 </div>
 
+
 <script>
+  // Toggle visibility of the "New project" form
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggle-new-project");
+    const newProjectForm = document.getElementById("new-project-form");
+
+    if (toggleBtn && newProjectForm) {
+      toggleBtn.addEventListener("click", function () {
+        const isHidden = newProjectForm.style.display === "none" || !newProjectForm.style.display;
+        newProjectForm.style.display = isHidden ? "block" : "none";
+        toggleBtn.textContent = isHidden ? "Cancel" : "+ New project";
+      });
+    }
+  });
+
   // Copy entire bibliography textarea (citations only)
   const biblioBtn = document.getElementById('copy-biblio-btn');
   const biblioTextarea = document.getElementById('biblio-text');
